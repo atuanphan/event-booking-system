@@ -31,7 +31,7 @@ public class SeatEntity {
 	@Column(name = "seat_number", length = 10, nullable = false)
 	private String seatNumber;
 	
-	@Column(name = "status")
+	@Column(name = "status", length = 50)
 	private String status;
 	
 	@Column(name = "version", nullable = false)

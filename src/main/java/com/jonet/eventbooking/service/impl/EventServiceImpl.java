@@ -1,4 +1,4 @@
-package com.jonet.eventbooking.service.admin.impl;
+package com.jonet.eventbooking.service.impl;
 
 import java.util.List;
 import java.util.UUID;
@@ -8,11 +8,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.jonet.eventbooking.converter.EventMapper;
+import com.jonet.eventbooking.customexception.EntityNotFoundException;
 import com.jonet.eventbooking.dto.request.event.EventRequest;
+import com.jonet.eventbooking.dto.response.event.EventDetailResponse;
 import com.jonet.eventbooking.dto.response.event.EventResponse;
 import com.jonet.eventbooking.entity.EventEntity;
 import com.jonet.eventbooking.repository.EventRepository;
-import com.jonet.eventbooking.service.admin.EventService;
+import com.jonet.eventbooking.service.EventService;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -25,30 +27,36 @@ public class EventServiceImpl implements EventService {
 	private final EventMapper eventMapper;
 
 	@Override
-	public List<EventResponse> getEvents(EventRequest eventRequest, Pageable pageable) {
+	public Page<EventResponse> getEvents(EventRequest eventRequest, Pageable pageable) {
 		Page<EventEntity> events = eventRepository.findAll(pageable);
-		return events.stream().map(eventMapper::toEventResponse).toList();
+		return events.map(eventMapper::toEventResponse);
 	}
 
 	@Override
 	public void create(EventRequest eventRequest) {
-		eventRepository.save(eventMapper.toEventEntity(eventRequest));
+		EventEntity event = eventMapper.toEventEntity(eventRequest);
+		event.getTicketTypes().forEach(it -> it.setEvent(event));
+		eventRepository.save(event);
 	}
 
 	@Override
 	public void update(EventRequest eventRequest) {
-		eventRepository.save(eventMapper.toEventEntity(eventRequest));
+		EventEntity event = eventMapper.toEventEntity(eventRequest);
+		event.getTicketTypes().forEach(it -> it.setEvent(event));
+		eventRepository.save(event);
 	}
 
 	@Override
 	public void delete(List<UUID> ids) {
-		eventRepository.deleteByIdIn(ids);
+		eventRepository.softDeleteEvents(ids);
 	}
 
+	// phần bussiness phía client
+	
 	@Override
-	public int totalPage() {
-		double total = (double) eventRepository.count() / 10;
-		return (int) Math.ceil(total);
+	public EventDetailResponse getEventDetailById(UUID id) {
+		EventEntity eventEntity = eventRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Event not found"));
+		return eventMapper.toEventDetailResponse(eventEntity);
 	}
 
 }

@@ -35,6 +35,6 @@ public class PaymentEntity {
 	@Column(name = "amount", precision = 19, scale = 2, nullable = false)
 	private BigDecimal amount;
 	
-	@Column(name = "payment_status", nullable = false)
+	@Column(name = "payment_status", nullable = false, length = 50)
 	private String paymentStatus;
 }

@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import org.hibernate.annotations.Check;
 import org.hibernate.annotations.UuidGenerator;
 
 import jakarta.persistence.CascadeType;
@@ -38,10 +39,17 @@ public class TicketTypeEntity {
 	@Column(name = "total_quantity", nullable = false)
 	private Integer totalQuantity;
 	
-	@ManyToOne
+	@Column(name = "available_quantity")
+	@Check(constraints = "availableQuantity >= 0")
+	private Integer availableQuantity;
+	
+	@ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
 	@JoinColumn(name = "event_id")
 	private EventEntity event;
 	
 	@OneToMany(mappedBy = "ticketType", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
 	private List<SeatEntity> seats;
+	
+	@OneToMany(mappedBy = "ticketType")
+	private List<OrderItemsEntity> orderItems;
 }

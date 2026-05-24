@@ -26,7 +26,7 @@ public class PromotionEntity {
 	@Column(name = "id", updatable = false, nullable = false)
 	private UUID id;
 	
-	@Column(name = "code", length = 20, unique = false)
+	@Column(name = "code", length = 20, unique = true)
 	private String code;
 	
 	@Column(name = "discount_type")

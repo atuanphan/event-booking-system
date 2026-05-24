@@ -1,4 +1,4 @@
-package com.jonet.eventbooking.service.admin.impl;
+package com.jonet.eventbooking.service.impl;
 
 import java.util.List;
 import java.util.UUID;
@@ -12,7 +12,7 @@ import com.jonet.eventbooking.dto.request.venue.VenueRequest;
 import com.jonet.eventbooking.dto.response.venue.VenueResponse;
 import com.jonet.eventbooking.entity.VenueEntity;
 import com.jonet.eventbooking.repository.VenueRepository;
-import com.jonet.eventbooking.service.admin.VenueService;
+import com.jonet.eventbooking.service.VenueService;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -25,15 +25,9 @@ public class VenueServiceImpl implements VenueService{
 	private final VenueMapper venueMapper;
 	
 	@Override
-	public List<VenueResponse> getVenues(Pageable pageable) {
+	public Page<VenueResponse> getVenues(Pageable pageable) {
 		Page<VenueEntity> venues = venueRepository.findAll(pageable);
-		return venues.getContent().stream().map(venueMapper::toVenueResponse).toList();
-	}
-
-	@Override
-	public int totalPage() {
-		double total = (double)venueRepository.count() / 10;
-		return (int) Math.ceil(total);
+		return venues.map(venueMapper::toVenueResponse);
 	}
 
 	@Override

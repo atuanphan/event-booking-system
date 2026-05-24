@@ -13,5 +13,5 @@ public class TicketTypeResponse {
 	private String name;
 	private BigDecimal price;
 	private Integer totalQuantity;
-	private UUID eventId;
+	private Integer availableQuantity;
 }

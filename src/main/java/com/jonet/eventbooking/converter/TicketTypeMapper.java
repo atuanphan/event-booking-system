@@ -9,15 +9,8 @@ import com.jonet.eventbooking.entity.TicketTypeEntity;
 
 @Mapper(componentModel = "spring")
 public interface TicketTypeMapper {
-	@Mapping(source = "event.id", target = "eventId")
 	public TicketTypeResponse toTicketTypeResponse(TicketTypeEntity ticketTypeEntity);
 	
-//	default TicketTypeEntity mapIdToTicketType(UUID id) {
-//		if(id == null) return null;
-//		TicketTypeEntity ticketType = new TicketTypeEntity();
-//        ticketType.setId(id);
-//        return ticketType;
-//	}
-	
+	@Mapping(ignore = true, target = "event")
 	public TicketTypeEntity toTicketTypeEntity(TicketTypeRequest ticketTypeRequest);
 }

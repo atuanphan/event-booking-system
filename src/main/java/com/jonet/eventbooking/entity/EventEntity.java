@@ -9,7 +9,6 @@ import org.hibernate.annotations.UuidGenerator;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -44,16 +43,16 @@ public class EventEntity {
 	@Column(name = "end_time")
 	private LocalDateTime endTime;
 	
-	@Column(name = "status", nullable = false)
+	@Column(name = "status", nullable = false, length = 50)
 	private String status;
 	
 	@Column(name = "image_url", length = 500)
 	private String imageUrl;
-	
+
 	@ManyToOne
 	@JoinColumn(name = "venue_id")
 	private VenueEntity venue;
-	
-	@OneToMany(mappedBy = "event", fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+
+	@OneToMany(mappedBy = "event", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
 	private List<TicketTypeEntity> ticketTypes;
 }
