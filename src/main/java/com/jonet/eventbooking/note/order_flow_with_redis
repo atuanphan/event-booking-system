@@ -1,0 +1,6 @@
+
+
+                             Quy trình xử lí quá trình Order với Redis + MySQL
+
+- Phải tạo một hàm tự động cập nhật availableQuantity của từng Ticket dưới database.
+

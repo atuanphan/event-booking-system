@@ -15,6 +15,7 @@ import com.jonet.eventbooking.dto.response.event.EventResponse;
 import com.jonet.eventbooking.entity.EventEntity;
 import com.jonet.eventbooking.repository.EventRepository;
 import com.jonet.eventbooking.service.EventService;
+import com.jonet.eventbooking.service.TicketTypeService;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 public class EventServiceImpl implements EventService {
 	private final EventRepository eventRepository;
 	private final EventMapper eventMapper;
+	private final TicketTypeService ticketTypeService;
 
 	@Override
 	public Page<EventResponse> getEvents(EventRequest eventRequest, Pageable pageable) {
@@ -42,7 +44,10 @@ public class EventServiceImpl implements EventService {
 	@Override
 	public void update(EventRequest eventRequest) {
 		EventEntity event = eventMapper.toEventEntity(eventRequest);
-		event.getTicketTypes().forEach(it -> it.setEvent(event));
+		event.getTicketTypes().forEach(it -> {
+			it.setEvent(event);
+			ticketTypeService.updateTicketRedis(it);
+		});
 		eventRepository.save(event);
 	}
 

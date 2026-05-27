@@ -23,7 +23,7 @@ import com.jonet.eventbooking.dto.request.payment.VNPayReturnRequest;
 import com.jonet.eventbooking.projections.OrderMinInfo;
 import com.jonet.eventbooking.repository.OrderRepository;
 import com.jonet.eventbooking.service.PaymentService;
-import com.jonet.eventbooking.utils.VNPayURLUtils;
+import com.jonet.eventbooking.utils.VNPayUtils;
 
 import lombok.RequiredArgsConstructor;
 
@@ -62,7 +62,7 @@ public class VNPayServiceImpl implements PaymentService {
 		String vnp_CreateDate = formatter.format(cld.getTime());
 		vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
 
-		cld.add(Calendar.MINUTE, 15);
+		cld.add(Calendar.MINUTE, 2);
 		String vnp_ExpireDate = formatter.format(cld.getTime());
 		vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
 
@@ -100,12 +100,12 @@ public class VNPayServiceImpl implements PaymentService {
 	public boolean calculateInboundHash(VNPayReturnRequest request) {
 		request.setVnp_OrderInfo(request.getVnp_OrderInfo().replace(" ", "+"));
 		StringBuilder builder = new StringBuilder();
-		for(Map.Entry<String, String> map : VNPayURLUtils.getURL(request).entrySet()) {
+		for(Map.Entry<String, String> map : VNPayUtils.getURL(request).entrySet()) {
 			builder.append(map.getKey()).append("=").append(map.getValue()).append("&");
 		}
 		if(builder.length() > 0) builder.deleteCharAt(builder.length() - 1);
 		String hashUrl = VNPayConfig.hmacSHA512(VNPayConfig.secretKey, builder.toString());
-		boolean check = VNPayURLUtils.verifyCallbackSignature(request.getVnp_SecureHash(), hashUrl);
+		boolean check = VNPayUtils.verifyCallbackSignature(request.getVnp_SecureHash(), hashUrl);
 		return check;
 	}
 
