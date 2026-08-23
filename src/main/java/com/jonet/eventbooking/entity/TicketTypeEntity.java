@@ -40,7 +40,7 @@ public class TicketTypeEntity {
 	private Integer totalQuantity;
 	
 	@Column(name = "available_quantity")
-	@Check(constraints = "availableQuantity >= 0")
+	@Check(constraints = "available_quantity >= 0")
 	private Integer availableQuantity;
 	
 	@ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
