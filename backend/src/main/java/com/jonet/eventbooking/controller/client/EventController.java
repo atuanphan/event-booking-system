@@ -14,7 +14,7 @@ import com.jonet.eventbooking.service.EventService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/v1/events")
+@RequestMapping("/api/events")
 @RequiredArgsConstructor
 public class EventController {
 	private final EventService eventService;
