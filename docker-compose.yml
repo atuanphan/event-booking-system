@@ -5,8 +5,10 @@ services:
     container_name: ticket_backend_service
     ports:
       - "8044:8044"
+      - "5005:5005"
     environment:
       - TZ=Asia/Ho_Chi_Minh
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
     env_file:
       - ./backend/.env
     depends_on:

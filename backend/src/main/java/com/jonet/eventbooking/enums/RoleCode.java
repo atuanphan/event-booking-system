@@ -4,9 +4,10 @@ import lombok.Getter;
 
 @Getter
 public enum RoleCode {
-	ROLE_ADMIN(""),
-	ROLE_CUSTOMER(""),
-	ROLE_STAFF("");
+	ADMIN(""),
+	ORGANIZER(""),
+	CUSTOMER(""),
+	STAFF("");
 	
 	private String name;
 	

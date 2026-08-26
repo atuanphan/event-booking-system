@@ -5,9 +5,13 @@ import java.util.UUID;
 
 import org.hibernate.annotations.UuidGenerator;
 
+import com.jonet.eventbooking.enums.AuthProvider;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -17,6 +21,8 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -26,6 +32,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class UserEntity {
 	public UserEntity(UUID id) {
 		this.id = id;
@@ -48,6 +56,11 @@ public class UserEntity {
 
 	@Column(name = "status")
 	private int status;
+	
+	@Enumerated(EnumType.STRING)
+	private AuthProvider provider;
+	
+	private String providerId;
 
 	@ManyToMany(cascade = { CascadeType.MERGE })
 	@JoinTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id", nullable = false), inverseJoinColumns = @JoinColumn(name = "role_id", nullable = false))

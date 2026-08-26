@@ -34,7 +34,6 @@ public class UserServiceImpl implements UserService {
 	private final EmailService emailService;
 	private final RedisTemplate<Object, Object> redisTemplate;
 	private static final String REDIS_SET_KEY = "emails:registed_set";
-
 	@Override
 	public void create(UserRequest userRequest) {
 		boolean isEmail = redisTemplate.opsForSet().isMember(REDIS_SET_KEY, userRequest.getEmail());
@@ -43,7 +42,7 @@ public class UserServiceImpl implements UserService {
 		}
 		UserEntity userEntity = userMapper.toUserEntity(userRequest);
 		userEntity.setPassword(passwordEncoder.encode(userRequest.getPassword()));
-		userEntity.setRoles(List.of(roleService.getRoleByCode(RoleCode.ROLE_CUSTOMER.toString())));
+		userEntity.setRoles(List.of(roleService.getRoleByCode(RoleCode.CUSTOMER.toString())));
 		userRepository.save(userEntity);
 		redisTemplate.opsForSet().add(REDIS_SET_KEY, userEntity.getEmail());
 		mailExecutor.submitTask(() -> {
@@ -68,4 +67,5 @@ public class UserServiceImpl implements UserService {
 		List<UserEntity> users = userRepository.findAll();
 		return users.stream().map(userMapper::toUserResponse).toList();
 	}
+
 }
