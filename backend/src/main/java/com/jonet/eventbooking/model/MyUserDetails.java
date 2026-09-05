@@ -47,14 +47,15 @@ public class MyUserDetails implements UserDetails{
 	}
 
 	public static MyUserDetails build(UserEntity userEntity) {
-		List<GrantedAuthority> authorities = userEntity.getRoles().stream()
-				.map(role -> new SimpleGrantedAuthority("ROLE_" + role.getCode())).collect(Collectors.toList());
+		List<String> roles = userEntity.getRoles().stream().map(role -> role.getCode()).collect(Collectors.toList());
+		List<GrantedAuthority> authorities = roles.stream()
+				.map(role -> new SimpleGrantedAuthority("ROLE_" + role)).collect(Collectors.toList());
 		return MyUserDetails.builder()
 				.id(userEntity.getId())
 				.fullname(userEntity.getFullname())
 				.email(userEntity.getEmail())
 				.password(userEntity.getPassword())
-				.roles(userEntity.getRoles().stream().map(role -> role.getCode()).collect(Collectors.toList()))
+				.roles(roles)
 				.provider(userEntity.getProvider().name())
 				.accountNonExpired(true)
 				.accountNonLocked(true)

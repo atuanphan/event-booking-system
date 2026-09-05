@@ -35,9 +35,13 @@ public class AuthServiceImpl implements AuthService {
 		MyUserDetails myUserDetails = (MyUserDetails) auth.getPrincipal();
 
 		String accessToken = jwtService.generateAccessToken(myUserDetails);
-		UserResponse userResponse = UserResponse.builder().id(myUserDetails.getId()).email(myUserDetails.getEmail())
-				.fullname(myUserDetails.getFullname()).roles(myUserDetails.getRoles())
-				.provider(myUserDetails.getProvider()).build();
+		UserResponse userResponse = UserResponse.builder()
+		        .id(myUserDetails.getId())
+				.email(myUserDetails.getEmail())
+				.fullname(myUserDetails.getFullname())
+				.roles(myUserDetails.getRoles())
+				.provider(myUserDetails.getProvider())
+				.build();
 
 		return new AuthResult(new AuthResponse(accessToken, 900L, userResponse),
 				jwtService.generateRefreshToken(myUserDetails));

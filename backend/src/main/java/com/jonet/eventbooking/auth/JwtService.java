@@ -57,7 +57,7 @@ public class JwtService {
         		.secure(false)
         		.sameSite("Lax")
         		.path("/")
-        		.maxAge(refreshTokenExpiry)
+        		.maxAge(Duration.ofMillis(refreshTokenExpiry))
         		.build();
     }
 

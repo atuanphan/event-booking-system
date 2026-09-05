@@ -39,10 +39,10 @@ public class AuthController {
 	}
 
 	@PostMapping("/logout")
-    public ResponseEntity<?> logout(@CookieValue(value = "refresh_token", required = false) String refreshToken) {
-        authService.logout(refreshToken);
-        ResponseCookie deleteCookie = ResponseCookie.from("refresh_token", "")
-            .httpOnly(true).secure(true).sameSite("Lax").path("/").maxAge(0).build();
-        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, deleteCookie.toString()).build();
-    }
+	public ResponseEntity<?> logout(@CookieValue(value = "refresh_token", required = false) String refreshToken) {
+		authService.logout(refreshToken);
+		ResponseCookie deleteCookie = ResponseCookie.from("refresh_token", "")
+				.httpOnly(true).secure(true).sameSite("Lax").path("/").maxAge(15).build();
+		return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, deleteCookie.toString()).build();
+	}
 }

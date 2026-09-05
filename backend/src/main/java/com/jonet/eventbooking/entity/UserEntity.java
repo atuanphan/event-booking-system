@@ -62,7 +62,7 @@ public class UserEntity {
 	
 	private String providerId;
 
-	@ManyToMany(cascade = { CascadeType.MERGE })
+	@ManyToMany(cascade = { CascadeType.MERGE, CascadeType.PERSIST })
 	@JoinTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id", nullable = false), inverseJoinColumns = @JoinColumn(name = "role_id", nullable = false))
 	private List<RoleEntity> roles;
 

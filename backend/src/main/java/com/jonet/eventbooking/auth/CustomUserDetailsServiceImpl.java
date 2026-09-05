@@ -1,4 +1,4 @@
-package com.jonet.eventbooking.auth.custom;
+package com.jonet.eventbooking.auth;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

@@ -58,3 +58,6 @@ token:
     expiry: ${ACCESS_TOKEN_EXPIRY}
   refresh:
     expiry: ${REFRESH_TOKEN_EXPIRY}
+
+jonet:
+  redirect-url: http://localhost:3000
