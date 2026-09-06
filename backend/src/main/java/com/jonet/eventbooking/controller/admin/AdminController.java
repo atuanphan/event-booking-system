@@ -18,7 +18,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/admin")
+@RequestMapping("/v1/admin")
 @RequiredArgsConstructor
 public class AdminController {
 	private final UserService userService;

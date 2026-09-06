@@ -11,7 +11,7 @@ import com.jonet.eventbooking.service.OrderService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/payment")
+@RequestMapping("/v1/payment")
 @RequiredArgsConstructor
 public class VNPayController {
 	private final OrderService orderService;
