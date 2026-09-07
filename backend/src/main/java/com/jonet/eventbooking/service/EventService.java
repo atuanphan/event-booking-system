@@ -7,13 +7,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.jonet.eventbooking.dto.request.event.EventRequest;
+import com.jonet.eventbooking.dto.request.event.EventSearchRequest;
 import com.jonet.eventbooking.dto.response.event.EventDetailResponse;
 import com.jonet.eventbooking.dto.response.event.EventResponse;
 
 public interface EventService {
-	public Page<EventResponse> getEvents(EventRequest eventRequest, Pageable pageable);
+	public Page<EventResponse> getEvents(EventSearchRequest eventRequest, Pageable pageable);
 	public void create(EventRequest eventRequest);
 	public void update(EventRequest eventRequest);
 	public void delete(List<UUID> ids);
 	public EventDetailResponse getEventDetailById(UUID id);
+	public List<EventResponse> getEvents(String name);
 }

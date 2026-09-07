@@ -30,7 +30,14 @@ export default function EventListPage() {
   const fetchEvents = async () => {
     setLoading(true);
     try {
-      const { data } = await api.post('/admin/events', { page, pageSize: 10, name: search || undefined });
+      const { data } = await api.get('/admin/events', {
+        params: {
+          page,
+          pageSize: 10,
+          name: search || undefined,
+        },
+      });
+
       setEvents(data.list || []);
       setTotalPages(data.totalPage || 1);
     } catch {

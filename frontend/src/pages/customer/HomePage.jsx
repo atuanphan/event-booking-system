@@ -2,30 +2,26 @@ import { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import api from '../../api/axios';
 import EventCard from '../../components/EventCard';
-import Pagination from '../../components/Pagination';
 import LoadingSpinner from '../../components/LoadingSpinner';
 
 export default function HomePage() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState('');
 
   useEffect(() => {
     fetchEvents();
-  }, [page]);
+  }, []);
 
   const fetchEvents = async () => {
     setLoading(true);
     try {
-      const { data } = await api.post('/admin/events', {
-        page,
-        pageSize: 8,
-        name: search || undefined,
+      const { data } = await api.get('/events', {
+        params: {
+          name: search || undefined,
+        },
       });
-      setEvents(data.list || []);
-      setTotalPages(data.totalPage || 1);
+      setEvents(data || []);
     } catch (err) {
       console.error('Failed to fetch events:', err);
     } finally {
@@ -35,7 +31,6 @@ export default function HomePage() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    setPage(1);
     fetchEvents();
   };
 
@@ -81,7 +76,6 @@ export default function HomePage() {
               <EventCard key={event.id} event={event} />
             ))}
           </div>
-          <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
         </>
       )}
     </div>

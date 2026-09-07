@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.jonet.eventbooking.converter.EventMapper;
 import com.jonet.eventbooking.customexception.EntityNotFoundException;
 import com.jonet.eventbooking.dto.request.event.EventRequest;
+import com.jonet.eventbooking.dto.request.event.EventSearchRequest;
 import com.jonet.eventbooking.dto.response.event.EventDetailResponse;
 import com.jonet.eventbooking.dto.response.event.EventResponse;
 import com.jonet.eventbooking.entity.EventEntity;
@@ -29,7 +30,7 @@ public class EventServiceImpl implements EventService {
 	private final TicketTypeService ticketTypeService;
 
 	@Override
-	public Page<EventResponse> getEvents(EventRequest eventRequest, Pageable pageable) {
+	public Page<EventResponse> getEvents(EventSearchRequest eventRequest, Pageable pageable) {
 		Page<EventEntity> events = eventRepository.findAll(pageable);
 		return events.map(eventMapper::toEventResponse);
 	}
@@ -64,4 +65,9 @@ public class EventServiceImpl implements EventService {
 		return eventMapper.toEventDetailResponse(eventEntity);
 	}
 
+	@Override
+	public List<EventResponse> getEvents(String name) {
+		List<EventEntity> events = eventRepository.findAll();
+		return events.stream().map(eventMapper::toEventResponse).toList();
+	}
 }

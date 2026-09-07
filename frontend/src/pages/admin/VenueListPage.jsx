@@ -19,7 +19,7 @@ export default function VenueListPage() {
   const fetchVenues = async () => {
     setLoading(true);
     try {
-      const { data } = await api.post('/admin/venues', { page, pageSize: 10 });
+      const { data } = await api.get('/admin/venues', { page, pageSize: 10 });
       setVenues(data.list || []);
       setTotalPages(data.totalPage || 1);
     } catch {
