@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.jonet.eventbooking.dto.PagedResult;
 import com.jonet.eventbooking.dto.request.venue.VenueRequest;
+import com.jonet.eventbooking.dto.request.venue.VenueSearchRequest;
 import com.jonet.eventbooking.dto.response.venue.VenueResponse;
 import com.jonet.eventbooking.service.VenueService;
 
@@ -25,13 +26,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/v1/admin")
+@RequestMapping("/v1/admin")
 @RequiredArgsConstructor
 public class VenueController {
 	private final VenueService venueService;
 
 	@GetMapping("/venues")
-	public ResponseEntity<PagedResult> getVenues(@RequestBody VenueRequest venueRequest) {
+	public ResponseEntity<PagedResult> getVenues(VenueSearchRequest venueRequest) {
 		Page<VenueResponse> response = venueService.getVenues(PageRequest.of(venueRequest.getPage() - 1, venueRequest.getPageSize()));
 		return ResponseEntity.ok(PagedResult.of(response.getContent(), response.getTotalPages()));
 	}

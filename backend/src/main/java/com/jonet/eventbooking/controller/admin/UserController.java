@@ -1,4 +1,4 @@
-package com.jonet.eventbooking.controller.client;
+package com.jonet.eventbooking.controller.admin;
 
 import java.util.List;
 import java.util.UUID;
@@ -21,26 +21,25 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/v1")
 @RequiredArgsConstructor
-public class AuthController {
+@RequestMapping("/v1/users")
+public class UserController {
 	private final UserService userService;
-	
-	@GetMapping("/auth")
+
+	@GetMapping
 	public ResponseEntity<List<UserResponse>> getCustomers() {
 		return ResponseEntity.ok(userService.getUsers());
 	}
-	
-	@PostMapping("/auth/register")
+
+	@PostMapping("/register")
 	public ResponseEntity<String> registerAccount(@Valid @RequestBody UserRequest userRequest) {
 		userService.create(userRequest);
 		return ResponseEntity.status(HttpStatus.CREATED).build();
 	}
-	
-	@DeleteMapping("/auth/{id}/{email}")
+
+	@DeleteMapping("/{id}/{email}")
 	public ResponseEntity<String> delete(@PathVariable UUID id, @PathVariable String email) {
 		userService.delete(id, email);
 		return ResponseEntity.ok("delete successfully!");
 	}
-	
 }

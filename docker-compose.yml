@@ -5,8 +5,10 @@ services:
     container_name: ticket_backend_service
     ports:
       - "8044:8044"
+      - "5005:5005"
     environment:
       - TZ=Asia/Ho_Chi_Minh
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
     env_file:
       - ./backend/.env
     depends_on:
@@ -14,6 +16,23 @@ services:
         condition: service_healthy # ← đợi mysql healthy rồi mới start backend
       redis:
         condition: service_healthy # ← đợi redis healthy rồi mới start backend
+
+  ticket_frontend_service:
+    build: 
+      context: ./frontend
+      args: 
+        VITE_API_URL: ${VITE_API_URL}
+    image: ticket_frontend_image
+    container_name: ticket_frontend_service
+    restart: unless-stopped
+    env_file:
+      - ./frontend/.env
+    ports:
+      - "3000:80"
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+    depends_on:
+      - ticket_backend_service
 
   mysql:
     image: mysql:8

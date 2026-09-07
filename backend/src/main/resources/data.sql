@@ -41,14 +41,25 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE users (
     id BINARY(16) NOT NULL,
+
     email VARCHAR(100),
+
     fullname VARCHAR(150),
+
     password VARCHAR(255),
+
+    provider VARCHAR(30) DEFAULT 'LOCAL',
+
+    provider_id VARCHAR(255),
+
     status INT NOT NULL,
 
     PRIMARY KEY (id),
 
-    UNIQUE KEY uk_users_email (email)
+    UNIQUE KEY uk_users_email (email),
+
+    UNIQUE KEY uk_users_provider (provider, provider_id)
+
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci;
@@ -330,62 +341,78 @@ VALUES
 -- ============================================================
 
 INSERT INTO users
-(id, email, password, fullname, status)
+(id, email, password, fullname, provider, provider_id, status)
 VALUES
 (
     UUID_TO_BIN('11111111-1111-1111-1111-111111111111'),
     'admin@eventhub.vn',
-    '$2a$10$demo_admin_hash',
+    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
     'System Admin',
+    'LOCAL',
+    NULL,
     1
 ),
 (
     UUID_TO_BIN('22222222-2222-2222-2222-222222222222'),
     'nguyenan@gmail.com',
-    '$2a$10$demo_user_hash_01',
+    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
     'Nguyen An',
+    'LOCAL',
+    NULL,
     1
 ),
 (
     UUID_TO_BIN('33333333-3333-3333-3333-333333333333'),
     'tranbinh@gmail.com',
-    '$2a$10$demo_user_hash_02',
+    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
     'Tran Binh',
+    'LOCAL',
+    NULL,
     1
 ),
 (
     UUID_TO_BIN('44444444-4444-4444-4444-444444444444'),
     'lechi@gmail.com',
-    '$2a$10$demo_user_hash_03',
+    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
     'Le Chi',
+    'LOCAL',
+    NULL,
     1
 ),
 (
     UUID_TO_BIN('55555555-5555-5555-5555-555555555555'),
     'phamduc@gmail.com',
-    '$2a$10$demo_user_hash_04',
+    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
     'Pham Duc',
+    'LOCAL',
+    NULL,
     1
 ),
 (
     UUID_TO_BIN('66666666-6666-6666-6666-666666666666'),
     'hoangminh@gmail.com',
-    '$2a$10$demo_user_hash_05',
+    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
     'Hoang Minh',
+    'LOCAL',
+    NULL,
     1
 ),
 (
     UUID_TO_BIN('77777777-7777-7777-7777-777777777777'),
     'vothu@gmail.com',
-    '$2a$10$demo_user_hash_06',
+    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
     'Vo Thu',
+    'LOCAL',
+    NULL,
     1
 ),
 (
     UUID_TO_BIN('88888888-8888-8888-8888-888888888888'),
     'doanlong@gmail.com',
-    '$2a$10$demo_user_hash_07',
+    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
     'Doan Long',
+    'LOCAL',
+    NULL,
     1
 );
 
