@@ -1,5 +1,6 @@
 package com.jonet.eventbooking.service.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -104,7 +105,7 @@ public class UserServiceImpl implements UserService {
                 .status(STATUS_ACTIVE)
                 .provider(provider)
                 .providerId(providerId)
-                .roles(List.of(getDefaultRole()))
+                .roles(new ArrayList<>(List.of(getDefaultRole())))
                 .build();
         return userRepository.save(user);
     }

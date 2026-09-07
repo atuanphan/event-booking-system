@@ -1,11 +1,15 @@
 package com.jonet.eventbooking.service.impl;
 
+import java.util.UUID;
+
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.jonet.eventbooking.auth.JwtService;
 import com.jonet.eventbooking.customexception.InvalidRefreshTokenException;
@@ -15,7 +19,10 @@ import com.jonet.eventbooking.dto.RefreshTokenPayload;
 import com.jonet.eventbooking.dto.request.AuthRequest;
 import com.jonet.eventbooking.dto.response.auth.AuthResponse;
 import com.jonet.eventbooking.dto.response.user.UserResponse;
+import com.jonet.eventbooking.entity.RoleEntity;
+import com.jonet.eventbooking.entity.UserEntity;
 import com.jonet.eventbooking.model.MyUserDetails;
+import com.jonet.eventbooking.repository.UserRepository;
 import com.jonet.eventbooking.service.AuthService;
 
 import lombok.RequiredArgsConstructor;
@@ -27,6 +34,7 @@ public class AuthServiceImpl implements AuthService {
 	private final JwtService jwtService;
 	private final RedisTemplate<Object, Object> redisTemplate;
 	private final String REFRESH_KEY = "refresh-token";
+	private final UserRepository userRepository;
 
 	@Override
 	public AuthResult login(AuthRequest authRequest) {
@@ -75,6 +83,28 @@ public class AuthServiceImpl implements AuthService {
 		if (refreshToken != null) {
             redisTemplate.delete(REFRESH_KEY.concat(":" + refreshToken));
         }
+	}
+
+	@Override
+	public UserResponse getCurrentUser(Authentication authentication) {
+		if (authentication == null || !authentication.isAuthenticated()) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+		}
+
+		UUID userId = (UUID) authentication.getPrincipal();
+		UserEntity user = userRepository.findById(userId)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		UserResponse response = UserResponse.builder()
+				.id(user.getId())
+				.fullname(user.getFullname())
+				.email(user.getEmail())
+				.roles(user.getRoles().stream()
+						.map(RoleEntity::getCode)
+						.toList())
+				.provider(user.getProvider().name())
+				.build();
+		return response;
 	}
 
 }

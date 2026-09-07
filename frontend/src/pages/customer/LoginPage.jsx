@@ -20,7 +20,7 @@ const FACEBOOK_ICON = (
   </svg>
 );
 
-const API_BASE = 'http://localhost:8044';
+const API_BASE = import.meta.env.VITE_API_URL;
 
 export default function LoginPage() {
   const { login } = useAuth();

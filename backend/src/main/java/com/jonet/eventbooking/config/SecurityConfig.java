@@ -36,16 +36,18 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
 		http
-		    .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
+		    .csrf(csrf -> csrf.disable())
 			.cors(Customizer.withDefaults())
 			.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.exceptionHandling(ex -> ex
                                 .authenticationEntryPoint(jwtAuthenticationEntryPoint))
 		    .authorizeHttpRequests(auth -> auth
 				    .requestMatchers("/login").permitAll()
-		    	    .requestMatchers("/api/admin/**").hasRole("ADMIN")
-		    	    .requestMatchers("/api/checkin/**").hasAnyRole("STAFF", "ADMIN")
-		    	    .requestMatchers("/api/events", "/api/events/**", "/api/auth/**").permitAll()
+		    	    .requestMatchers("/admin/**").hasRole("ADMIN")
+		    	    .requestMatchers("/checkin/**").hasAnyRole("STAFF", "ADMIN")
+		    	    .requestMatchers("/events", "/events/**").permitAll()
+					.requestMatchers("/auth/login", "/auth/refresh").permitAll()
+					.requestMatchers("/auth/me").authenticated()
 		    	    .anyRequest().authenticated())
 			.oauth2Login(oauth2 -> oauth2
             .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService)) //nhận info từ Google trả về, tạo/merge vào database

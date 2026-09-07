@@ -19,6 +19,7 @@ import VenueListPage from './pages/admin/VenueListPage';
 import VenueFormPage from './pages/admin/VenueFormPage';
 import UserListPage from './pages/admin/UserListPage';
 import StaffManagementPage from './pages/admin/StaffManagementPage';
+import OAuthCallbackPage from './pages/customer/OAuthCallbackPage';
 
 function ProtectedRoute({ children, requireAdmin = false }) {
   const { user, isAdmin } = useAuth();
@@ -41,6 +42,7 @@ export default function App() {
         <Route path="/payment/success" element={<PaymentSuccessPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/oauth-callback" element={<OAuthCallbackPage />} />
       </Route>
 
       {/* Admin routes */}

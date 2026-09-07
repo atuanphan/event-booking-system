@@ -34,6 +34,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         String email = (String) attributes.get("email");
         String name = (String) attributes.get("name");
+        String providerId = "google".equals(registrationId)
+            ? (String) attributes.get("sub")
+            : (String) attributes.get("id");
 
         if (email == null) {
             throw new OAuth2AuthenticationException("Email not found from OAuth2 provider");
@@ -42,7 +45,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         // Tìm user theo email, nếu chưa có thì tạo mới
         UserEntity user = userRepository.findByEmail(email)
                 .map(existing -> updateExistingUser(existing, name))
-                .orElseGet(() -> registerNewUser(email, name, registrationId));
+                .orElseGet(() -> registerNewUser(email, name, registrationId, providerId));
 
         userRepository.save(user);
 
@@ -50,13 +53,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return new CustomOAuth2User(user, attributes);
     }
 
-    private UserEntity registerNewUser(String email, String name, String provider) {
+    private UserEntity registerNewUser(String email, String name, String provider, String providerId) {
         RoleEntity role = roleRepository.findByCode("CUSTOMER")
                 .orElseThrow(() -> new IllegalStateException("Default role ROLE_USER not found in DB"));
         return UserEntity.builder()
                     .email(email)
                     .fullname(name)
-                    .provider(AuthProvider.valueOf(provider))
+                    .provider(AuthProvider.valueOf(provider.toUpperCase()))
+                    .providerId(providerId)
                     .password(null)
                     .roles(new ArrayList<>(List.of(role)))
                     .build();
