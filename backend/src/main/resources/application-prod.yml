@@ -44,6 +44,12 @@ spring:
             client-id: ${FACEBOOK_CLIENT_ID}
             client-secret: ${FACEBOOK_CLIENT_SECRET}
             scope: public_profile, email
+        provider:
+          facebook:
+            authorization-uri: https://www.facebook.com/v26.0/dialog/oauth
+            token-uri: https://graph.facebook.com/v26.0/oauth/access_token
+            user-info-uri: https://graph.facebook.com/v26.0/me?fields=id,name,email
+            user-name-attribute: id
       resourceserver:
         jwt:
           jwk-set-uri: ${JWK_SET_URI}
