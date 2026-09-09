@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.jonet.eventbooking.auth.JwtService;
+import com.jonet.eventbooking.customexception.EntityNotFoundException;
 import com.jonet.eventbooking.customexception.InvalidRefreshTokenException;
 import com.jonet.eventbooking.dto.AuthResult;
 import com.jonet.eventbooking.dto.RefreshResult;
@@ -111,13 +112,14 @@ public class AuthServiceImpl implements AuthService {
 	@Override
 	public String exchangeOAuthCode(Map<String, String> body) {
 		String code = body.get("code");
-		UUID userId = (UUID) redisTemplate.opsForValue().get("oauth-code:" + code);
-		if (userId == null) {
+		Object userIdObject = redisTemplate.opsForValue().get("oauth-code:" + code);
+		if (userIdObject == null) {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or expired code");
 		}
 		redisTemplate.delete("oauth-code:" + code);
 
-		UserEntity user = userRepository.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		UUID userId = UUID.fromString(userIdObject.toString());
+		UserEntity user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User not found"));
 		MyUserDetails userDetails = MyUserDetails.build(user);
 		String accessToken = jwtService.generateAccessToken(userDetails);
 

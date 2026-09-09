@@ -56,7 +56,7 @@ public class SecurityConfig {
 		    	    .requestMatchers("/v1/admin/**").hasRole("ADMIN")
 		    	    .requestMatchers("/v1/checkin/**").hasAnyRole("STAFF", "ADMIN")
 		    	    .requestMatchers("/v1/events", "/v1/events/**").permitAll()
-					.requestMatchers("/v1/auth/login", "/v1/auth/refresh").permitAll()
+					.requestMatchers("/v1/auth/login", "/v1/auth/refresh", "/v1/auth/oauth/exchange").permitAll()
 					.requestMatchers("/v1/auth/me").authenticated()
 		    	    .anyRequest().authenticated())
 			.oauth2Login(oauth2 -> oauth2

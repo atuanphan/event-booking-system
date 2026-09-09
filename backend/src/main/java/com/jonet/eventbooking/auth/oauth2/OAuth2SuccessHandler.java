@@ -13,7 +13,6 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 
 import com.jonet.eventbooking.auth.JwtService;
-import com.jonet.eventbooking.dto.RefreshTokenPayload;
 import com.jonet.eventbooking.entity.UserEntity;
 import com.jonet.eventbooking.model.MyUserDetails;
 
@@ -44,14 +43,10 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         MyUserDetails userDetails = MyUserDetails.build(user);
         ResponseCookie refreshTokenCookie = jwtService.generateRefreshToken(userDetails);
-
-        redisTemplate.opsForValue().set("refresh-token:" + refreshTokenCookie.getValue(),
-                new RefreshTokenPayload(userDetails.getId(), userDetails.getEmail(), userDetails.getRoles()),
-                Duration.ofMillis(refreshTokenExpiration));
         response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 
         String codeAuth = UUID.randomUUID().toString();
-        redisTemplate.opsForValue().set("code-auth:" + codeAuth, userDetails.getId(), Duration.ofMillis(5));
+        redisTemplate.opsForValue().set("oauth-code:" + codeAuth, userDetails.getId(), Duration.ofSeconds(30000)); // 30 giây
         String redirect = redirectUrl + "/oauth-callback?code=" + codeAuth;
         
         response.sendRedirect(redirect);
