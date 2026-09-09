@@ -1,5 +1,5 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import api from '../api/axios';
+import { createContext, useContext, useState } from 'react';
+import api, { setAccessToken, clearAccessToken } from '../api/axios';
 
 const AuthContext = createContext(null);
 
@@ -17,9 +17,16 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     const { data } = await api.post('/auth/login', { email, password });
-    localStorage.setItem('accessToken', data.accessToken);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    setUser(data.user);
+
+    if (data?.accessToken) {
+      setAccessToken(data.accessToken);
+    }
+
+    if (data?.user) {
+      localStorage.setItem('user', JSON.stringify(data.user));
+      setUser(data.user);
+    }
+
     return data.user;
   };
 
@@ -27,9 +34,10 @@ export function AuthProvider({ children }) {
     try {
       await api.post('/auth/logout');
     } catch {
-      // ignore
+      // Ignore server-side logout error and still clear local frontend state.
     }
-    localStorage.removeItem('accessToken');
+
+    clearAccessToken();
     localStorage.removeItem('user');
     setUser(null);
   };

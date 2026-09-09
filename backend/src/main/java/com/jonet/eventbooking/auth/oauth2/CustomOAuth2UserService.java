@@ -1,6 +1,5 @@
 package com.jonet.eventbooking.auth.oauth2;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -45,7 +44,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         }
 
         // Tìm user theo email, nếu chưa có thì tạo mới
-        UserEntity user = userRepository.findByEmail(email)
+        UserEntity user = userRepository.findByEmailWithRoles(email)
                 .map(existing -> updateExistingUser(existing, name))
                 .orElseGet(() -> registerNewUser(email, name, registrationId, providerId));
 

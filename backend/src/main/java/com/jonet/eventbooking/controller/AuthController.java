@@ -1,5 +1,7 @@
 package com.jonet.eventbooking.controller;
 
+import java.util.Map;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -44,14 +46,25 @@ public class AuthController {
 	@PostMapping("/logout")
 	public ResponseEntity<?> logout(@CookieValue(value = "refresh_token", required = false) String refreshToken) {
 		authService.logout(refreshToken);
-		ResponseCookie deleteCookie = ResponseCookie.from("refresh_token", "")
-				.httpOnly(true).secure(true).sameSite("Lax").path("/").maxAge(15).build();
-		return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, deleteCookie.toString()).build();
+		ResponseCookie deleteRefreshCookie = ResponseCookie.from("refresh_token", "")
+				.httpOnly(true).secure(true).sameSite("Lax").path("/").maxAge(0).build();
+		ResponseCookie deleteAccessCookie = ResponseCookie.from("accessToken", "")
+				.httpOnly(true).secure(false).sameSite("Lax").path("/").maxAge(0).build();
+		return ResponseEntity.ok()
+				.header(HttpHeaders.SET_COOKIE, deleteRefreshCookie.toString())
+				.header(HttpHeaders.SET_COOKIE, deleteAccessCookie.toString())
+				.build();
 	}
 
 	@GetMapping("/me")
 	public ResponseEntity<?> getCurrentUser(Authentication authentication) {
 		UserResponse response = authService.getCurrentUser(authentication);
 		return ResponseEntity.ok(response);
+	}
+
+	@PostMapping("/oauth/exchange")
+	public ResponseEntity<?> exchangeOAuthCode(@RequestBody Map<String, String> body) {
+		String accessToken = authService.exchangeOAuthCode(body);
+		return ResponseEntity.ok(accessToken);
 	}
 }

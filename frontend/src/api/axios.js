@@ -6,63 +6,56 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Attach JWT access token from localStorage
+let accessTokenMemory = null;
+
+export const setAccessToken = (token) => {
+  accessTokenMemory = token || null;
+};
+
+export const getAccessToken = () => accessTokenMemory;
+
+export const clearAccessToken = () => {
+  accessTokenMemory = null;
+};
+
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken');
+  if (config._skipAuth) {
+    return config;
+  }
+
+  const token = getAccessToken();
   if (token) {
+    config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${token}`;
   }
+
   return config;
 });
-
-// Auto refresh token on 401
-let isRefreshing = false;
-let failedQueue = [];
-
-const processQueue = (error, token = null) => {
-  failedQueue.forEach((prom) => {
-    if (error) prom.reject(error);
-    else prom.resolve(token);
-  });
-  failedQueue = [];
-};
 
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
+    const originalRequest = error.config || {};
 
     if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        }).then((token) => {
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return api(originalRequest);
-        });
-      }
-
       originalRequest._retry = true;
-      isRefreshing = true;
 
       try {
-        const { data } = await axios.post('/api/auth/refresh', null, {
+        const { data: newAccessToken } = await api.post('/auth/refresh', null, {
           withCredentials: true,
+          _skipAuth: true,
         });
-        const newToken = data.accessToken || data;
-        localStorage.setItem('accessToken', newToken);
-        api.defaults.headers.common.Authorization = `Bearer ${newToken}`;
-        processQueue(null, newToken);
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+
+        setAccessToken(newAccessToken);
+        originalRequest.headers = originalRequest.headers || {};
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+
         return api(originalRequest);
       } catch (refreshError) {
-        processQueue(refreshError, null);
-        localStorage.removeItem('accessToken');
+        clearAccessToken();
         localStorage.removeItem('user');
         window.location.href = '/login';
         return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
       }
     }
 

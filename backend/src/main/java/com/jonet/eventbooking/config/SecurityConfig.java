@@ -53,11 +53,11 @@ public class SecurityConfig {
                                 .authenticationEntryPoint(jwtAuthenticationEntryPoint))
 		    .authorizeHttpRequests(auth -> auth
 				    .requestMatchers("/login").permitAll()
-		    	    .requestMatchers("/admin/**").hasRole("ADMIN")
-		    	    .requestMatchers("/checkin/**").hasAnyRole("STAFF", "ADMIN")
+		    	    .requestMatchers("/v1/admin/**").hasRole("ADMIN")
+		    	    .requestMatchers("/v1/checkin/**").hasAnyRole("STAFF", "ADMIN")
 		    	    .requestMatchers("/v1/events", "/v1/events/**").permitAll()
-					.requestMatchers("/auth/login", "/auth/refresh").permitAll()
-					.requestMatchers("/auth/me").authenticated()
+					.requestMatchers("/v1/auth/login", "/v1/auth/refresh").permitAll()
+					.requestMatchers("/v1/auth/me").authenticated()
 		    	    .anyRequest().authenticated())
 			.oauth2Login(oauth2 -> oauth2
             .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService)) //nhận info từ Google trả về, tạo/merge vào database

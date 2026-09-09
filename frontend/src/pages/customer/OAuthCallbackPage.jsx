@@ -11,22 +11,27 @@ export default function OAuthCallbackPage() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        // cookie accessToken đã được browser tự đính kèm nếu withCredentials: true
-        const res = await api.get('/auth/me');
+        const res = await api.get('/auth/me', {
+          withCredentials: true,
+        });
         const user = res.data;
-        localStorage.setItem('user', JSON.stringify(user)); // nếu vẫn cần cache thông tin hiển thị
+
+        localStorage.setItem('user', JSON.stringify(user));
         toast.success('Đăng nhập thành công!');
         setStatus('success');
-        if (user.roles?.includes('ADMIN') || user.roles?.includes('CUSTOMER')) {
+
+        if (user.roles?.includes('ADMIN')) {
           navigate('/admin', { replace: true });
         } else {
           navigate('/', { replace: true });
         }
       } catch (err) {
         console.error('OAuth callback error:', err);
+        localStorage.removeItem('user');
         setStatus('error');
       }
     };
+
     fetchUser();
   }, [navigate]);
 
@@ -37,6 +42,7 @@ export default function OAuthCallbackPage() {
       </div>
     );
   }
+
   if (status === 'error') {
     return (
       <div className="min-h-[70vh] flex items-center justify-center">
@@ -44,5 +50,6 @@ export default function OAuthCallbackPage() {
       </div>
     );
   }
+
   return null;
 }
