@@ -30,6 +30,11 @@ export function AuthProvider({ children }) {
     return data.user;
   };
 
+  const setUserData = (userData) => {
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
+  };
+
   const logout = async () => {
     try {
       await api.post('/auth/logout');
@@ -49,7 +54,7 @@ export function AuthProvider({ children }) {
   const isAdmin = user?.roles?.includes('ADMIN') || user?.roles?.includes('STAFF');
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, register, isAdmin, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, register, isAdmin, loading, setUserData }}>
       {children}
     </AuthContext.Provider>
   );

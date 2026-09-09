@@ -32,6 +32,10 @@ export default function LoginPage() {
   const from = location.state?.from || '/';
 
   const handleOAuth = (provider) => {
+    const from = location.state?.from || location.pathname;
+    if (from !== '/login') {
+      sessionStorage.setItem('returnUrl', from);
+    }
     window.location.href = `${API_BASE}/oauth2/authorization/${provider}`;
   };
 

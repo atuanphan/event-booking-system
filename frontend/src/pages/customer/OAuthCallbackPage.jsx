@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api, { setAccessToken } from '../../api/axios';
+import { useAuth } from '../../context/AuthContext';
 
 export default function OAuthCallbackPage() {
   const navigate = useNavigate();
   const [status, setStatus] = useState('processing');
   const calledRef = useRef(false);
+  const { setUserData } = useAuth();
 
   useEffect(() => {
     if (calledRef.current) return;
@@ -23,16 +25,20 @@ export default function OAuthCallbackPage() {
 
         const { data: user } = await api.get('/auth/me');
 
-        localStorage.setItem('user', JSON.stringify(user));
+        setUserData(user); // lưu vào localStorage và state
+
         toast.success('Đăng nhập thành công!');
         setStatus('success');
 
         window.history.replaceState({}, '', window.location.pathname);
 
+        const returnUrl = sessionStorage.getItem('returnUrl');
+        sessionStorage.removeItem('returnUrl'); 
+
         if (user.roles?.includes('ADMIN')) {
           navigate('/admin', { replace: true });
         } else {
-          navigate('/', { replace: true });
+          navigate(returnUrl || '/', { replace: true });
         }
       } catch (err) {
         console.error('OAuth callback error:', err);
@@ -42,7 +48,7 @@ export default function OAuthCallbackPage() {
     };
 
     fetchUser();
-  }, [navigate]);
+  }, [navigate, setUserData]);
 
   if (status === 'processing') {
     return (
