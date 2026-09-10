@@ -1,12 +1,19 @@
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Ticket, User, LogOut, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function Layout() {
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 8);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -16,7 +23,7 @@ export default function Layout() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* Navbar */}
-      <nav className="bg-white shadow-sm sticky top-0 z-50">
+      <nav className={`bg-white sticky top-0 z-50 transition-shadow ${scrolled ? 'shadow-md' : 'shadow-sm'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <Link to="/" className="flex items-center gap-2 text-indigo-600 font-bold text-xl">
@@ -26,7 +33,12 @@ export default function Layout() {
 
             {/* Desktop nav */}
             <div className="hidden md:flex items-center gap-4">
-              <Link to="/" className="text-gray-600 hover:text-indigo-600 transition">Sự kiện</Link>
+              <Link to="/" className="relative text-gray-600 hover:text-indigo-600 transition after:absolute after:left-0 after:-bottom-2 after:h-0.5 after:w-0 after:bg-indigo-600 after:transition-all hover:after:w-full">Sự kiện</Link>
+              {!user && (
+                <Link to="/register" className="border border-indigo-600 text-indigo-700 px-4 py-2 rounded-lg hover:bg-indigo-50 transition">
+                  Đăng ký
+                </Link>
+              )}
               {user ? (
                 <>
                   {isAdmin && (
@@ -77,9 +89,10 @@ export default function Layout() {
                 <button onClick={handleLogout} className="block py-2 text-red-500">Đăng xuất</button>
               </>
             ) : (
-              <Link to="/login" className="block py-2 text-indigo-600 font-medium" onClick={() => setMenuOpen(false)}>
-                Đăng nhập
-              </Link>
+              <>
+                <Link to="/register" className="block py-2 text-indigo-600 font-medium" onClick={() => setMenuOpen(false)}>Đăng ký</Link>
+                <Link to="/login" className="block py-2 text-indigo-600 font-medium" onClick={() => setMenuOpen(false)}>Đăng nhập</Link>
+              </>
             )}
           </div>
         )}

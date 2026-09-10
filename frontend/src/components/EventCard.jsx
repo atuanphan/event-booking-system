@@ -1,12 +1,13 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 
 const STATUS_COLORS = {
-  UPCOMING: 'bg-blue-100 text-blue-700',
-  ONGOING: 'bg-green-100 text-green-700',
-  FINISHED: 'bg-gray-100 text-gray-500',
-  DRAFT: 'bg-yellow-100 text-yellow-700',
-  CANCELLED: 'bg-red-100 text-red-700',
+  UPCOMING: 'bg-indigo-50 text-indigo-700 border border-indigo-200',
+  ONGOING: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+  FINISHED: 'bg-slate-100 text-slate-500 border border-slate-200',
+  DRAFT: 'bg-amber-50 text-amber-700 border border-amber-200',
+  CANCELLED: 'bg-rose-50 text-rose-700 border border-rose-200',
 };
 
 const STATUS_LABELS = {
@@ -17,6 +18,24 @@ const STATUS_LABELS = {
   CANCELLED: 'Đã hủy',
 };
 
+const CATEGORY_MAP = {
+  music: { label: 'Âm nhạc', icon: '🎵', gradient: 'linear-gradient(135deg, #a78bfa, #f472b6)' },
+  tech: { label: 'Hội nghị/Công nghệ', icon: '💻', gradient: 'linear-gradient(135deg, #60a5fa, #3b82f6)' },
+  business: { label: 'Networking/Kinh doanh', icon: '🤝', gradient: 'linear-gradient(135deg, #34d399, #10b981)' },
+  comedy: { label: 'Hài kịch/Giải trí', icon: '🎤', gradient: 'linear-gradient(135deg, #fbbf24, #f97316)' },
+};
+
+function getCategory(event) {
+  const name = `${event?.name || ''}`.toLowerCase();
+  const desc = `${event?.description || ''}`.toLowerCase();
+  const text = `${name} ${desc}`;
+  if (/music|nhạc|concert|festival|show|band|live/.test(text)) return 'music';
+  if (/tech|conference|seminar|workshop|dev|software|ai|cloud/.test(text)) return 'tech';
+  if (/business|network|networking|startup|commerce|sale/.test(text)) return 'business';
+  if (/comedy|fun|hài|entertainment|show/.test(text)) return 'comedy';
+  return 'tech';
+}
+
 function formatDateTime(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr);
@@ -24,40 +43,67 @@ function formatDateTime(dateStr) {
 }
 
 export default function EventCard({ event }) {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
+  const category = getCategory(event);
+  const categoryInfo = CATEGORY_MAP[category] || CATEGORY_MAP.tech;
   const minPrice = event.ticketTypes?.length
     ? Math.min(...event.ticketTypes.map((t) => t.price))
     : null;
+  const hasImage = Boolean(event.imageUrl) && !imageFailed;
 
   return (
     <Link
       to={`/events/${event.id}`}
-      className="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden group"
+      className="block bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden group"
     >
-      <div className="aspect-video overflow-hidden bg-gray-100">
-        <img
-          src={event.imageUrl || '/placeholder.jpg'}
-          alt={event.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-          onError={(e) => { e.target.src = 'https://placehold.co/600x400?text=Event'; }}
-        />
+      <div className="relative aspect-video overflow-hidden bg-slate-100">
+        {!imageLoaded && hasImage && (
+          <div className="absolute inset-0 z-10 animate-pulse bg-slate-200" />
+        )}
+        {event.imageUrl && !imageFailed ? (
+          <img
+            src={event.imageUrl}
+            alt={event.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+            onLoad={() => setImageLoaded(true)}
+            onError={(e) => {
+              e.target.style.display = 'none';
+              setImageFailed(true);
+            }}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center" style={{ background: categoryInfo.gradient }}>
+            <span className="text-4xl text-white drop-shadow-sm">{categoryInfo.icon}</span>
+          </div>
+        )}
+
+        {!hasImage && (
+          <span className="absolute left-3 top-3 px-2 py-1 rounded-full bg-white/80 text-slate-800 text-xs font-semibold backdrop-blur-sm">
+            {categoryInfo.label}
+          </span>
+        )}
       </div>
+
       <div className="p-4">
-        <div className="flex items-center justify-between mb-2">
-          <span className={`text-xs font-medium px-2 py-1 rounded-full ${STATUS_COLORS[event.status] || 'bg-gray-100'}`}>
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${STATUS_COLORS[event.status] || 'bg-gray-100 text-gray-700'}`}>
             {STATUS_LABELS[event.status] || event.status}
           </span>
           {minPrice !== null && (
-            <span className="text-sm font-semibold text-indigo-600">
+            <span className="text-sm font-bold text-indigo-700">
               {minPrice.toLocaleString('vi-VN')}đ
             </span>
           )}
         </div>
-        <h3 className="font-semibold text-gray-900 mb-1 line-clamp-1 group-hover:text-indigo-600 transition">
+
+        <h3 className="font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-indigo-600 transition">
           {event.name}
         </h3>
+
         <div className="flex items-center gap-1 text-sm text-gray-500">
           <Calendar className="w-3.5 h-3.5" />
-          {formatDateTime(event.startTime)}
+          <span>{formatDateTime(event.startTime)}</span>
         </div>
       </div>
     </Link>

@@ -4,6 +4,7 @@ import { useAuth } from './context/AuthContext';
 // Customer pages
 import Layout from './components/Layout';
 import HomePage from './pages/customer/HomePage';
+import EventsPage from './pages/customer/EventsPage';
 import EventDetailPage from './pages/customer/EventDetailPage';
 import CheckoutPage from './pages/customer/CheckoutPage';
 import PaymentSuccessPage from './pages/customer/PaymentSuccessPage';
@@ -42,6 +43,7 @@ export default function App() {
       {/* Customer routes */}
       <Route element={<Layout />}>
         <Route path="/" element={<HomePage />} />
+        <Route path="/su-kien" element={<EventsPage />} />
         <Route path="/events/:id" element={<EventDetailPage />} />
         <Route path="/checkout" element={
           <ProtectedRoute><CheckoutPage /></ProtectedRoute>
