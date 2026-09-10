@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
-import { Plus, Trash2, ArrowLeft } from 'lucide-react';
+import { Plus, Trash2, ArrowLeft, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
 
@@ -12,6 +12,7 @@ export default function EventFormPage() {
   const [venues, setVenues] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEdit);
+  const [imageFile, setImageFile] = useState(null);
 
   const { register, handleSubmit, control, watch, reset, formState: { errors } } = useForm({
     defaultValues: {
@@ -24,9 +25,10 @@ export default function EventFormPage() {
   const { fields: ticketFields, append: addTicket, remove: removeTicket } = useFieldArray({ control, name: 'ticketTypes' });
 
   useEffect(() => {
-    api.post('/admin/venues', { page: 1, pageSize: 100 }).then(({ data }) => {
+    api.get('/admin/venues', { params: { page: 1, pageSize: 100 } }).then(({ data }) => {
       setVenues(data.list || []);
     });
+
     if (isEdit) {
       api.get(`/events/${id}`).then(({ data }) => {
         reset({
@@ -61,11 +63,18 @@ export default function EventFormPage() {
           seats: t.seats || [],
         })),
       };
+
       if (isEdit) {
         await api.put('/admin/events', payload);
         toast.success('Cập nhật thành công');
       } else {
-        await api.post('/admin/events', payload);
+        const formData = new FormData();
+        formData.append('eventRequest', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
+        if (imageFile) {
+          formData.append('file', imageFile);
+        }
+
+        await api.post('/admin/events', formData);
         toast.success('Tạo thành công');
       }
       navigate('/admin/events');
@@ -121,9 +130,22 @@ export default function EventFormPage() {
               {errors.venueId && <p className="text-red-500 text-xs">{errors.venueId.message}</p>}
             </div>
           </div>
-          <div>
+          <div className="space-y-2">
             <label className="block text-sm font-medium mb-1">URL hình ảnh</label>
             <input {...register('imageUrl')} className="w-full px-4 py-2 border rounded-lg" placeholder="https://..." />
+          </div>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium mb-1">Tải ảnh lên</label>
+            <label className="flex items-center gap-2 w-full px-4 py-3 border border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
+              <Upload className="w-4 h-4 text-indigo-600" />
+              <span className="text-sm text-gray-600">{imageFile ? imageFile.name : 'Chọn ảnh'}</span>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+              />
+            </label>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
