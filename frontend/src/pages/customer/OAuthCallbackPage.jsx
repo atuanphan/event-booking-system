@@ -1,34 +1,54 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import api from '../../api/axios';
+import api, { setAccessToken } from '../../api/axios';
+import { useAuth } from '../../context/AuthContext';
 
 export default function OAuthCallbackPage() {
   const navigate = useNavigate();
   const [status, setStatus] = useState('processing');
+  const calledRef = useRef(false);
+  const { setUserData } = useAuth();
 
   useEffect(() => {
+    if (calledRef.current) return;
+    calledRef.current = true;
+
     const fetchUser = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      if (!code) return navigate('/login');
       try {
-        // cookie accessToken đã được browser tự đính kèm nếu withCredentials: true
-        const res = await api.get('/auth/me');
-        const user = res.data;
-        localStorage.setItem('user', JSON.stringify(user)); // nếu vẫn cần cache thông tin hiển thị
+        const { data } = await api.post('/auth/oauth/exchange', { code }, { _skipAuth: true });
+        setAccessToken(data.accessToken); // lưu vào memory
+
+        const { data: user } = await api.get('/auth/me');
+
+        setUserData(user); // lưu vào localStorage và state
+
         toast.success('Đăng nhập thành công!');
         setStatus('success');
-        if (user.roles?.includes('ADMIN') || user.roles?.includes('CUSTOMER')) {
+
+        window.history.replaceState({}, '', window.location.pathname);
+
+        const returnUrl = sessionStorage.getItem('returnUrl');
+        sessionStorage.removeItem('returnUrl'); 
+
+        if (user.roles?.includes('ADMIN')) {
           navigate('/admin', { replace: true });
         } else {
-          navigate('/', { replace: true });
+          navigate(returnUrl || '/', { replace: true });
         }
       } catch (err) {
         console.error('OAuth callback error:', err);
+        localStorage.removeItem('user');
         setStatus('error');
       }
     };
+
     fetchUser();
-  }, [navigate]);
+  }, [navigate, setUserData]);
 
   if (status === 'processing') {
     return (
@@ -37,6 +57,7 @@ export default function OAuthCallbackPage() {
       </div>
     );
   }
+
   if (status === 'error') {
     return (
       <div className="min-h-[70vh] flex items-center justify-center">
@@ -44,5 +65,6 @@ export default function OAuthCallbackPage() {
       </div>
     );
   }
+
   return null;
 }

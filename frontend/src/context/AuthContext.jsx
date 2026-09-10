@@ -1,5 +1,5 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import api from '../api/axios';
+import { createContext, useContext, useState } from 'react';
+import api, { setAccessToken, clearAccessToken } from '../api/axios';
 
 const AuthContext = createContext(null);
 
@@ -17,19 +17,32 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     const { data } = await api.post('/auth/login', { email, password });
-    localStorage.setItem('accessToken', data.accessToken);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    setUser(data.user);
+
+    if (data?.accessToken) {
+      setAccessToken(data.accessToken);
+    }
+
+    if (data?.user) {
+      localStorage.setItem('user', JSON.stringify(data.user));
+      setUser(data.user);
+    }
+
     return data.user;
+  };
+
+  const setUserData = (userData) => {
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
   };
 
   const logout = async () => {
     try {
       await api.post('/auth/logout');
     } catch {
-      // ignore
+      // Ignore server-side logout error and still clear local frontend state.
     }
-    localStorage.removeItem('accessToken');
+
+    clearAccessToken();
     localStorage.removeItem('user');
     setUser(null);
   };
@@ -41,7 +54,7 @@ export function AuthProvider({ children }) {
   const isAdmin = user?.roles?.includes('ADMIN') || user?.roles?.includes('STAFF');
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, register, isAdmin, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, register, isAdmin, loading, setUserData }}>
       {children}
     </AuthContext.Provider>
   );

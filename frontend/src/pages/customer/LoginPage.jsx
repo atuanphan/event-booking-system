@@ -20,7 +20,7 @@ const FACEBOOK_ICON = (
   </svg>
 );
 
-const API_BASE = import.meta.env.VITE_API_URL;
+const API_BASE = 'http://localhost:8044/api';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -32,6 +32,10 @@ export default function LoginPage() {
   const from = location.state?.from || '/';
 
   const handleOAuth = (provider) => {
+    const from = location.state?.from || location.pathname;
+    if (from !== '/login') {
+      sessionStorage.setItem('returnUrl', from);
+    }
     window.location.href = `${API_BASE}/oauth2/authorization/${provider}`;
   };
 

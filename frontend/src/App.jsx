@@ -24,8 +24,15 @@ import OAuthCallbackPage from './pages/customer/OAuthCallbackPage';
 function ProtectedRoute({ children, requireAdmin = false }) {
   const { user, isAdmin } = useAuth();
   const location = useLocation();
-  if (!user) return <Navigate to="/login" state={{ from: location.pathname }} />;
-  if (requireAdmin && !isAdmin) return <Navigate to="/" />;
+
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location.pathname }} />;
+  }
+
+  if (requireAdmin && !isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+
   return children;
 }
 

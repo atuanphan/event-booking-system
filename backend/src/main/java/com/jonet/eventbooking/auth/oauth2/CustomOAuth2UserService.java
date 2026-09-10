@@ -1,6 +1,5 @@
 package com.jonet.eventbooking.auth.oauth2;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -17,9 +16,11 @@ import com.jonet.eventbooking.repository.RoleRepository;
 import com.jonet.eventbooking.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j 
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
@@ -43,7 +44,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         }
 
         // Tìm user theo email, nếu chưa có thì tạo mới
-        UserEntity user = userRepository.findByEmail(email)
+        UserEntity user = userRepository.findByEmailWithRoles(email)
                 .map(existing -> updateExistingUser(existing, name))
                 .orElseGet(() -> registerNewUser(email, name, registrationId, providerId));
 
@@ -62,7 +63,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     .provider(AuthProvider.valueOf(provider.toUpperCase()))
                     .providerId(providerId)
                     .password(null)
-                    .roles(new ArrayList<>(List.of(role)))
+                    .roles(List.of(role))
                     .build();
     }
 
