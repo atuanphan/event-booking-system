@@ -24,6 +24,8 @@ spring:
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
+      repositories:
+        enabled: false
   mail:
     host: ${MAIL_HOST}
     port: ${MAIL_PORT}
