@@ -17,5 +17,6 @@ public class TicketTypeRequest extends AbstractDTO{
 	private String name;
 	private BigDecimal price;
 	private Integer totalQuantity;
+	private Integer availableQuantity;
 	private List<SeatRequest> seats;
 }

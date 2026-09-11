@@ -6,7 +6,9 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  if (!(config.data instanceof FormData)) {
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type']; // xóa hẳn, không để sót giá trị cũ từ request trước
+  } else {
     config.headers['Content-Type'] = 'application/json';
   }
   return config;

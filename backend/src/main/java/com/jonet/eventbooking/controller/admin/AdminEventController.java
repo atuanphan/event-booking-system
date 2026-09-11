@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -47,9 +46,10 @@ public class AdminEventController {
 		return ResponseEntity.status(HttpStatus.CREATED).build();
 	}
 	
-	@PutMapping("/events")
-	public ResponseEntity<String> update(@Valid @RequestBody EventRequest eventRequest) {
-		eventService.update(eventRequest);
+	@PutMapping(value = "/events", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<String> update(@RequestPart @Valid EventRequest eventRequest,
+			@RequestPart(value = "file", required = false) MultipartFile file) {
+		eventService.update(eventRequest, file);
 		return ResponseEntity.ok("update successfully!");
 	}
 	
