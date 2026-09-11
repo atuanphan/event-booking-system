@@ -34,7 +34,7 @@ public class EventEntity {
 	private String name;
 	
 	@Lob
-	@Column(name = "description")
+	@Column(name = "description", columnDefinition = "TEXT")
 	private String description;
 	
 	@Column(name = "start_time")
