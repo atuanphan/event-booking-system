@@ -6,15 +6,17 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.jonet.eventbooking.dto.PagedResult;
 import com.jonet.eventbooking.dto.request.event.EventRequest;
@@ -37,15 +39,17 @@ public class AdminEventController {
 		return ResponseEntity.ok(PagedResult.of(response.getContent(), response.getTotalPages()));
 	}
 	
-	@PostMapping("/events")
-	public ResponseEntity<String> create(@Valid @RequestBody EventRequest eventRequest) {
-		eventService.create(eventRequest);
+	@PostMapping(value = "/events", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<String> create(@RequestPart @Valid EventRequest eventRequest,
+			@RequestPart(value = "file", required = false) MultipartFile file) {
+		eventService.create(eventRequest, file);
 		return ResponseEntity.status(HttpStatus.CREATED).build();
 	}
 	
-	@PutMapping("/events")
-	public ResponseEntity<String> update(@Valid @RequestBody EventRequest eventRequest) {
-		eventService.update(eventRequest);
+	@PutMapping(value = "/events", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<String> update(@RequestPart @Valid EventRequest eventRequest,
+			@RequestPart(value = "file", required = false) MultipartFile file) {
+		eventService.update(eventRequest, file);
 		return ResponseEntity.ok("update successfully!");
 	}
 	

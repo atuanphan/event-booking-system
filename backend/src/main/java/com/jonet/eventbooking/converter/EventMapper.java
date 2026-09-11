@@ -2,6 +2,7 @@ package com.jonet.eventbooking.converter;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
 import com.jonet.eventbooking.dto.request.event.EventRequest;
 import com.jonet.eventbooking.dto.response.event.EventDetailResponse;
@@ -18,5 +19,7 @@ public interface EventMapper {
 	EventEntity toEventEntity(EventRequest eventRequest);
 	
 	EventDetailResponse toEventDetailResponse(EventEntity eventEntity);
+
+	void updateEventEntity(EventRequest request, @MappingTarget EventEntity entity);
 	
 }

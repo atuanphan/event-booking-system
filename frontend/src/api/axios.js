@@ -2,8 +2,16 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: `${import.meta.env.VITE_API_URL}/v1`,
-  withCredentials: true,
-  headers: { 'Content-Type': 'application/json' },
+  withCredentials: true
+});
+
+api.interceptors.request.use((config) => {
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type']; // xóa hẳn, không để sót giá trị cũ từ request trước
+  } else {
+    config.headers['Content-Type'] = 'application/json';
+  }
+  return config;
 });
 
 let accessTokenMemory = null;
