@@ -41,8 +41,12 @@ export default function EventFormPage() {
           startTime: data.startTime?.slice(0, 16) || '',
           endTime: data.endTime?.slice(0, 16) || '',
           ticketTypes: data.ticketTypes?.map((t) => ({
-            id: t.id, name: t.name, price: t.price,
-            totalQuantity: t.totalQuantity, seats: [],
+            id: t.id,
+            name: t.name,
+            price: t.price,
+            totalQuantity: t.totalQuantity,
+            availableQuantity: t.availableQuantity ?? t.totalQuantity,
+            seats: [],
           })) || [],
         });
       }).finally(() => setFetching(false));
@@ -60,20 +64,22 @@ export default function EventFormPage() {
           ...t,
           price: Number(t.price),
           totalQuantity: Number(t.totalQuantity),
+          availableQuantity: Number(t.availableQuantity ?? t.totalQuantity),
           seats: t.seats || [],
         })),
       };
 
+      const formData = new FormData();
+      formData.append('eventRequest', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
+
+      if (imageFile) {
+        formData.append('file', imageFile);
+      }
+
       if (isEdit) {
-        await api.put('/admin/events', payload);
+        await api.put('/admin/events', formData);
         toast.success('Cập nhật thành công');
       } else {
-        const formData = new FormData();
-        formData.append('eventRequest', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
-        if (imageFile) {
-          formData.append('file', imageFile);
-        }
-
         await api.post('/admin/events', formData);
         toast.success('Tạo thành công');
       }

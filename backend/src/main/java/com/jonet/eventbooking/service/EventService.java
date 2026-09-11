@@ -15,7 +15,7 @@ import com.jonet.eventbooking.dto.response.event.EventResponse;
 public interface EventService {
 	public Page<EventResponse> getEvents(EventSearchRequest eventRequest, Pageable pageable);
 	public void create(EventRequest eventRequest, MultipartFile file);
-	public void update(EventRequest eventRequest);
+	public void update(EventRequest eventRequest, MultipartFile file);
 	public void delete(List<UUID> ids);
 	public EventDetailResponse getEventDetailById(UUID id);
 	public List<EventResponse> getEvents(String name);

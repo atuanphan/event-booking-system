@@ -53,6 +53,9 @@ public class EventEntity {
 	@JoinColumn(name = "venue_id")
 	private VenueEntity venue;
 
+	@Column (name = "public_id", length = 50) // id của ảnh trên cloudinary
+	private String publicId;
+
 	@OneToMany(mappedBy = "event", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
 	private List<TicketTypeEntity> ticketTypes;
 }

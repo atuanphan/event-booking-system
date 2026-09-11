@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.jonet.eventbooking.dto.UploadResult;
 
 import lombok.RequiredArgsConstructor;
 
@@ -16,19 +17,26 @@ import lombok.RequiredArgsConstructor;
 public class ImageService {
     private final Cloudinary cloudinary;
 
-    public String uploadImage(MultipartFile file, String folder) {
+    public UploadResult uploadImage(MultipartFile file, String folder) {
         try {
             Map result = cloudinary.uploader().upload(
                     file.getBytes(),
                     ObjectUtils.asMap("folder", folder));
-            return result.get("secure_url").toString();
+            return UploadResult.builder()
+                    .url(result.get("secure_url").toString())
+                    .publicId(result.get("public_id").toString())
+                    .build();
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
     }
 
-    public void deleteImage(String publicId) throws IOException {
-        cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+    public void deleteImage(String publicId) {
+        try {
+            cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
