@@ -1,5 +1,6 @@
 package com.jonet.eventbooking.service.impl;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -9,23 +10,31 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.jonet.eventbooking.auth.JwtService;
+import com.jonet.eventbooking.components.MailExecutor;
 import com.jonet.eventbooking.customexception.EntityNotFoundException;
 import com.jonet.eventbooking.customexception.InvalidRefreshTokenException;
+import com.jonet.eventbooking.customexception.ResourceAlreadyExistsException;
 import com.jonet.eventbooking.dto.AuthResult;
 import com.jonet.eventbooking.dto.RefreshResult;
 import com.jonet.eventbooking.dto.RefreshTokenPayload;
 import com.jonet.eventbooking.dto.request.AuthRequest;
+import com.jonet.eventbooking.dto.request.user.UserRequest;
 import com.jonet.eventbooking.dto.response.auth.AuthResponse;
 import com.jonet.eventbooking.dto.response.user.UserResponse;
 import com.jonet.eventbooking.entity.RoleEntity;
 import com.jonet.eventbooking.entity.UserEntity;
+import com.jonet.eventbooking.enums.AuthProvider;
+import com.jonet.eventbooking.enums.RoleCode;
 import com.jonet.eventbooking.model.MyUserDetails;
 import com.jonet.eventbooking.repository.UserRepository;
 import com.jonet.eventbooking.service.AuthService;
+import com.jonet.eventbooking.service.EmailService;
+import com.jonet.eventbooking.service.RoleService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -37,6 +46,12 @@ public class AuthServiceImpl implements AuthService {
 	private final RedisTemplate<Object, Object> redisTemplate;
 	private final String REFRESH_KEY = "refresh-token";
 	private final UserRepository userRepository;
+	private final PasswordEncoder passwordEncoder;
+	private final RoleService roleService;
+	private final MailExecutor mailExecutor;
+	private final EmailService emailService;
+	
+	private static final String REDIS_SET_KEY = "emails:registed_set";
 
 	@Override
 	public AuthResult login(AuthRequest authRequest) {
@@ -124,6 +139,29 @@ public class AuthServiceImpl implements AuthService {
 		String accessToken = jwtService.generateAccessToken(userDetails);
 
 		return accessToken;
+	}
+
+	@Override
+	public void registerAccount(UserRequest userRequest) {
+		boolean isEmail = redisTemplate.opsForSet().isMember(REDIS_SET_KEY, userRequest.getEmail());
+		if(Boolean.TRUE.equals(isEmail)) {
+			throw new ResourceAlreadyExistsException("Email đã được đăng kí.Vui lòng đăng nhập");
+		}
+
+		UserEntity userEntity = UserEntity.builder()
+                .email(userRequest.getEmail())
+                .fullname(userRequest.getFullname())
+                .password(passwordEncoder.encode(userRequest.getPassword()))
+                .roles(List.of(roleService.getRoleByCode(RoleCode.CUSTOMER.toString())))
+                .status(userRequest.getStatus())
+                .provider(AuthProvider.LOCAL)
+                .build();
+                
+		userRepository.save(userEntity);
+		redisTemplate.opsForSet().add(REDIS_SET_KEY, userEntity.getEmail());
+		mailExecutor.submitTask(() -> {
+			emailService.sendEmailRegisterSuccess(userRequest.getEmail());
+		});
 	}
 
 }
