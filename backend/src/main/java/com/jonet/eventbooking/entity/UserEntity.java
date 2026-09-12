@@ -57,6 +57,7 @@ public class UserEntity {
 	@Column(name = "status")
 	private int status;
 	
+	@Column(name = "provider", nullable = false)
 	@Enumerated(EnumType.STRING)
 	private AuthProvider provider;
 	

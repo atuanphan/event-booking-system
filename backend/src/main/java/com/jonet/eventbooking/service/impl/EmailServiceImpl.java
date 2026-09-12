@@ -25,7 +25,6 @@ public class EmailServiceImpl implements EmailService{
 		message.setText("Tài khoản của bạn đã được đăng ký ");
 		message.setSubject(emailAddress);
 		javaMailSender.send(message);
-		System.out.print("request email success");
 	}
 
 }
