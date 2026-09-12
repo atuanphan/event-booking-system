@@ -13,7 +13,7 @@ export default function DashboardPage() {
         const [events, venues, users] = await Promise.all([
           api.post('/admin/events', { page: 1, pageSize: 1 }),
           api.post('/admin/venues', { page: 1, pageSize: 1 }),
-          api.get('/users'),
+          api.get('/admin/users'),
         ]);
         setStats({
           events: events.data.totalPage * 10 || events.data.list?.length || 0,

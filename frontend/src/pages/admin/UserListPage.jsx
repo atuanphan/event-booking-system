@@ -13,7 +13,7 @@ export default function UserListPage() {
 
   const fetchUsers = async () => {
     try {
-      const { data } = await api.get('/users');
+      const { data } = await api.get('/admin/users');
       setUsers(data || []);
     } catch {
       toast.error('Không thể tải danh sách người dùng');
@@ -25,7 +25,7 @@ export default function UserListPage() {
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
-      await api.delete(`/users/${deleteTarget.id}/${deleteTarget.email}`);
+      await api.delete(`/admin/users/${deleteTarget.id}/${deleteTarget.email}`);
       toast.success('Xóa thành công');
       setDeleteTarget(null);
       fetchUsers();
