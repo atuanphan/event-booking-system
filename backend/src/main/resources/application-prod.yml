@@ -71,7 +71,7 @@ token:
     expiry: ${REFRESH_TOKEN_EXPIRY}
 
 jonet:
-  redirect-url: http://localhost:3000
+  redirect-url: ${REDIRECT_URL}
 
 cloudinary:
   cloud-name: ${CLOUDINARY_CLOUD_NAME}
