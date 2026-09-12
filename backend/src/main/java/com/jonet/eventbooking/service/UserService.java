@@ -10,7 +10,6 @@ import com.jonet.eventbooking.enums.AuthProvider;
 
 public interface UserService {
 	public List<UserResponse> getUsers();
-	public void create(UserRequest userRequest);
 	public void changePassword(UserRequest userRequest);
 	public void delete(UUID id, String email);
 	public UserEntity findOrCreateByEmail(String email,  String fullname, AuthProvider provider, String providerId);

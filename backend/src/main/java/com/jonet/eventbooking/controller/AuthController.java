@@ -3,6 +3,7 @@ package com.jonet.eventbooking.controller;
 import java.util.Map;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.jonet.eventbooking.dto.AuthResult;
 import com.jonet.eventbooking.dto.RefreshResult;
 import com.jonet.eventbooking.dto.request.AuthRequest;
+import com.jonet.eventbooking.dto.request.user.UserRequest;
 import com.jonet.eventbooking.dto.response.auth.AuthResponse;
 import com.jonet.eventbooking.dto.response.user.UserResponse;
 import com.jonet.eventbooking.service.AuthService;
@@ -41,6 +43,12 @@ public class AuthController {
 		RefreshResult result = authService.refreshToken(refreshToken);
 		return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, result.getRefreshToken().toString())
 				.body(result.getAccessToken());
+	}
+
+	@PostMapping("/register")
+	public ResponseEntity<String> registerAccount(@Valid @RequestBody UserRequest userRequest) {
+		authService.registerAccount(userRequest);
+		return ResponseEntity.status(HttpStatus.CREATED).build();
 	}
 
 	@PostMapping("/logout")

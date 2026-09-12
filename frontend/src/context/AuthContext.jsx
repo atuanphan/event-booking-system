@@ -48,7 +48,7 @@ export function AuthProvider({ children }) {
   };
 
   const register = async (fullname, email, password) => {
-    await api.post('/users/register', { fullname, email, password, status: 1 });
+    await api.post('/auth/register', { fullname, email, password, status: 1 });
   };
 
   const isAdmin = user?.roles?.includes('ADMIN') || user?.roles?.includes('STAFF');
