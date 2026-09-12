@@ -51,9 +51,16 @@ public class UserServiceImpl implements UserService {
 		if(Boolean.TRUE.equals(isEmail)) {
 			throw new ResourceAlreadyExistsException("Email đã được đăng kí.Vui lòng đăng nhập");
 		}
-		UserEntity userEntity = userMapper.toUserEntity(userRequest);
-		userEntity.setPassword(passwordEncoder.encode(userRequest.getPassword()));
-		userEntity.setRoles(List.of(roleService.getRoleByCode(RoleCode.CUSTOMER.toString())));
+
+		UserEntity userEntity = UserEntity.builder()
+                .email(userRequest.getEmail())
+                .fullname(userRequest.getFullname())
+                .password(passwordEncoder.encode(userRequest.getPassword()))
+                .roles(List.of(roleService.getRoleByCode(RoleCode.CUSTOMER.toString())))
+                .status(userRequest.getStatus())
+                .provider(AuthProvider.LOCAL)
+                .build();
+                
 		userRepository.save(userEntity);
 		redisTemplate.opsForSet().add(REDIS_SET_KEY, userEntity.getEmail());
 		mailExecutor.submitTask(() -> {
