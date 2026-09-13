@@ -73,6 +73,6 @@ public class AuthController {
 	@PostMapping("/oauth/exchange")
 	public ResponseEntity<?> exchangeOAuthCode(@RequestBody Map<String, String> body) {
 		String accessToken = authService.exchangeOAuthCode(body);
-		return ResponseEntity.ok(accessToken);
+		return ResponseEntity.ok(Map.of("accessToken", accessToken));
 	}
 }
