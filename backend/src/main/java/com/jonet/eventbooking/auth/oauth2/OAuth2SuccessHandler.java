@@ -46,7 +46,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 
         String codeAuth = UUID.randomUUID().toString();
-        redisTemplate.opsForValue().set("oauth-code:" + codeAuth, userDetails.getId(), Duration.ofSeconds(30000)); // 30 giây
+        redisTemplate.opsForValue().set("oauth-code:" + codeAuth, userDetails.getId(), Duration.ofSeconds(30)); // 30 giây
         String redirect = redirectUrl + "/oauth-callback?code=" + codeAuth;
         
         response.sendRedirect(redirect);
