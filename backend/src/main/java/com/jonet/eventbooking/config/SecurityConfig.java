@@ -59,7 +59,7 @@ public class SecurityConfig {
 					.requestMatchers("/v1/auth/login", "/v1/auth/refresh", "/v1/auth/oauth/exchange").permitAll()
 					.requestMatchers("/v1/auth/register").permitAll()
 					.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-					.requestMatchers("/v1/auth/me").authenticated()
+					.requestMatchers("/v1/auth/me", "/v1/payment/**").authenticated()
 		    	    .anyRequest().authenticated())
 			.oauth2Login(oauth2 -> oauth2
             .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService)) //nhận info từ Google trả về, tạo/merge vào database
