@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
+import LoadingSpinner from './components/LoadingSpinner';
 
 // Customer pages
 import Layout from './components/Layout';
@@ -23,11 +24,17 @@ import StaffManagementPage from './pages/admin/StaffManagementPage';
 import OAuthCallbackPage from './pages/customer/OAuthCallbackPage';
 
 function ProtectedRoute({ children, requireAdmin = false }) {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, authReady } = useAuth();
   const location = useLocation();
 
+  // Đang thử khôi phục phiên (silent refresh) lúc app khởi động / F5.
+  // Chưa biết chắc user còn đăng nhập hay không -> chưa vội redirect/render.
+  if (!authReady) {
+    return <LoadingSpinner size="lg" />;
+  }
+
   if (!user) {
-    return <Navigate to="/login" state={{ from: location.pathname }} />;
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
   if (requireAdmin && !isAdmin) {
