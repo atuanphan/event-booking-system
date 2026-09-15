@@ -74,11 +74,12 @@ public class AuthServiceImpl implements AuthService {
 
 	@Override
 	public RefreshResult refreshToken(String refreshToken) {
-		RefreshTokenPayload payload = (RefreshTokenPayload) redisTemplate.opsForValue().get(REFRESH_KEY.concat(":" + refreshToken));
+		String refreshKey = REFRESH_KEY.concat(":" + refreshToken);
+		RefreshTokenPayload payload = (RefreshTokenPayload) redisTemplate.opsForValue().get(refreshKey);
 		if(payload == null) {
 			throw new InvalidRefreshTokenException("Refresh token invalid, expired, or already used");
 		}
-		redisTemplate.delete(REFRESH_KEY);
+		redisTemplate.delete(refreshKey);
 
 		MyUserDetails user = MyUserDetails.builder()
 				.id(payload.id())
