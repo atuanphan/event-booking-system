@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Filter, Search, SlidersHorizontal } from 'lucide-react';
+import { CalendarDays, Filter, Search, SlidersHorizontal } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../../api/axios';
 import EventCard from '../../components/EventCard';
@@ -100,26 +100,35 @@ export default function EventsPage() {
   const updateFilter = (key, value) => setFilters((current) => ({ ...current, [key]: value }));
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8 rounded-3xl border border-indigo-100 bg-gradient-to-br from-violet-50 to-indigo-50 px-6 py-10 sm:px-10">
-        <p className="mb-2 text-sm font-bold uppercase tracking-wider text-indigo-600">Khám phá</p>
+    <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+      <header className="mb-5 pt-2">
+        <p className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-indigo-600">Khám phá</p>
         <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Tất cả sự kiện</h1>
-        <p className="mt-3 max-w-2xl text-slate-600">Tìm trải nghiệm tiếp theo phù hợp với lịch trình và sở thích của bạn.</p>
-      </div>
+        <p className="mt-2 max-w-2xl text-sm text-slate-600 sm:text-[15px]">Tìm trải nghiệm tiếp theo phù hợp với lịch trình và sở thích của bạn.</p>
+      </header>
 
-      <div className="mb-8 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="mb-4 flex items-center gap-2 font-bold text-slate-900"><SlidersHorizontal className="h-5 w-5 text-indigo-600" /> Bộ lọc</div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          <label className="relative lg:col-span-2">
+      <div className="mb-6 rounded-xl border border-slate-200 bg-white p-2 shadow-sm shadow-slate-200/40">
+        <div className="flex flex-wrap items-center gap-2 lg:flex-nowrap">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-indigo-600">
+            <SlidersHorizontal className="h-4 w-4" />
+          </div>
+
+          <label className="relative min-w-[180px] flex-[2.2]">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input value={filters.name} onChange={(event) => updateFilter('name', event.target.value)} placeholder="Tìm sự kiện..." className="w-full rounded-xl border border-slate-200 py-2.5 pl-9 pr-3 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100" />
+            <input value={filters.name} onChange={(event) => updateFilter('name', event.target.value)} placeholder="Tìm sự kiện..." className="h-10 w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100" />
           </label>
-          <select value={filters.category} onChange={(event) => updateFilter('category', event.target.value)} className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none focus:border-indigo-500">
+
+          <select value={filters.category} onChange={(event) => updateFilter('category', event.target.value)} className="h-10 min-w-[150px] flex-1 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100">
             {['Tất cả', 'Âm nhạc', 'Hội nghị', 'Giải trí', 'Thể thao'].map((category) => <option key={category}>{category}</option>)}
           </select>
-          <input type="date" value={filters.date} onChange={(event) => updateFilter('date', event.target.value)} className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none focus:border-indigo-500" />
-          <input type="number" min="0" value={filters.maxPrice} onChange={(event) => updateFilter('maxPrice', event.target.value)} placeholder="Giá tối đa" className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none focus:border-indigo-500" />
-          <input value={filters.location} onChange={(event) => updateFilter('location', event.target.value)} placeholder="Địa điểm" className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none focus:border-indigo-500" />
+
+          <label className="relative min-w-[150px] flex-1">
+            <CalendarDays className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input type="date" value={filters.date} onChange={(event) => updateFilter('date', event.target.value)} className="h-10 w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100" />
+          </label>
+
+          <input type="number" min="0" value={filters.maxPrice} onChange={(event) => updateFilter('maxPrice', event.target.value)} placeholder="Giá tối đa" className="h-10 min-w-[150px] flex-1 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100" />
+          <input value={filters.location} onChange={(event) => updateFilter('location', event.target.value)} placeholder="Địa điểm" className="h-10 min-w-[150px] flex-1 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100" />
         </div>
       </div>
 
