@@ -27,6 +27,10 @@ export default function EventsPage() {
   const [searchParams] = useSearchParams();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const pageSize = 8;
   const [filters, setFilters] = useState({
     name: '',
     category: CATEGORY_SLUGS[searchParams.get('category')] || searchParams.get('category') || 'Tất cả',
@@ -36,20 +40,54 @@ export default function EventsPage() {
   });
 
   useEffect(() => {
-    const loadEvents = async () => {
-      setLoading(true);
-      try {
-        const { data } = await api.get('/events', { params: { name: filters.name || undefined } });
-        setEvents(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error('Failed to fetch events:', error);
-        setEvents([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadEvents();
+    loadEvents(0);
   }, [filters.name]);
+
+  const loadEvents = async (nextPage) => {
+    if (nextPage === 0) setLoading(true);
+    else setLoadingMore(true);
+
+    try {
+      const { data } = await api.get('/events', {
+        params: {
+          name: filters.name || undefined,
+          page: nextPage,
+          pageSize,
+        },
+      });
+      const responseEvents = Array.isArray(data)
+        ? data
+        : data?.list || data?.content || data?.items || data?.data || [];
+      const totalPages = data?.totalPage ?? data?.totalPages;
+      const isLastPage = data?.last === true || (
+        Number.isInteger(totalPages) && nextPage >= totalPages - 1
+      );
+
+      let appendedCount = responseEvents.length;
+      setEvents((currentEvents) => {
+        if (nextPage === 0) return responseEvents;
+        const existingIds = new Set(currentEvents.map((event) => event.id));
+        const newEvents = responseEvents.filter((event) => !existingIds.has(event.id));
+        appendedCount = newEvents.length;
+        return [
+          ...currentEvents,
+          ...newEvents,
+        ];
+      });
+      setPage(nextPage);
+      setHasMore(isLastPage || responseEvents.length < pageSize || appendedCount === 0 ? false : true);
+    } catch (error) {
+      console.error('Failed to fetch events:', error);
+      if (nextPage === 0) setEvents([]);
+    } finally {
+      if (nextPage === 0) setLoading(false);
+      else setLoadingMore(false);
+    }
+  };
+
+  const handleLoadMore = () => {
+    if (!loadingMore && hasMore) loadEvents(page + 1);
+  };
 
   const visibleEvents = events.filter((event) => {
     const price = event.ticketTypes?.length ? Math.min(...event.ticketTypes.map((ticket) => ticket.price)) : 0;
@@ -87,7 +125,25 @@ export default function EventsPage() {
 
       {loading ? <div className="py-16 text-center text-slate-500">Đang tải sự kiện...</div> : visibleEvents.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-indigo-200 bg-indigo-50 px-8 py-16 text-center"><Filter className="mx-auto mb-4 h-10 w-10 text-indigo-400" /><p className="font-semibold text-slate-700">Không tìm thấy sự kiện phù hợp.</p><p className="mt-2 text-slate-500">Thử thay đổi từ khóa hoặc bộ lọc.</p></div>
-      ) : <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">{visibleEvents.map((event) => <EventCard key={event.id} event={event} />)}</div>}
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">{visibleEvents.map((event) => <EventCard key={event.id} event={event} />)}</div>
+          {hasMore && (
+            <div className="mt-10 flex items-center gap-4 text-slate-300">
+              <span aria-hidden="true" className="h-px flex-1 bg-slate-200" />
+              <button
+                type="button"
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+                className="shrink-0 bg-transparent px-1 font-semibold text-slate-600 transition hover:text-indigo-600 hover:underline disabled:cursor-not-allowed disabled:text-slate-400"
+              >
+                {loadingMore ? 'Đang tải...' : 'Xem thêm'}
+              </button>
+              <span aria-hidden="true" className="h-px flex-1 bg-slate-200" />
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }

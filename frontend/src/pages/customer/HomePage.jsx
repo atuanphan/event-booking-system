@@ -76,7 +76,7 @@ export default function HomePage() {
       </section>
 
       <div className="mt-10 text-center">
-        <Link to="/su-kien" className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 font-semibold text-white shadow-sm transition hover:bg-indigo-700">
+        <Link to="/events" className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 font-semibold text-white shadow-sm transition hover:bg-indigo-700">
           Khám phá tất cả sự kiện <ArrowRight className="h-4 w-4" />
         </Link>
       </div>

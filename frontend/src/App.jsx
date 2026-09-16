@@ -50,7 +50,7 @@ export default function App() {
       {/* Customer routes */}
       <Route element={<Layout />}>
         <Route path="/" element={<HomePage />} />
-        <Route path="/su-kien" element={<EventsPage />} />
+        <Route path="/events" element={<EventsPage />} />
         <Route path="/events/:id" element={<EventDetailPage />} />
         <Route path="/checkout" element={
           <ProtectedRoute><CheckoutPage /></ProtectedRoute>

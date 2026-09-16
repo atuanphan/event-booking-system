@@ -22,4 +22,5 @@ public interface EventMapper {
 
 	void updateEventEntity(EventRequest request, @MappingTarget EventEntity entity);
 	
+	EventResponse eventResponse(EventEntity eventEntity);
 }
