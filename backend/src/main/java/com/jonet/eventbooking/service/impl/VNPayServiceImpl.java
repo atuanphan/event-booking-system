@@ -66,7 +66,7 @@ public class VNPayServiceImpl implements PaymentService {
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
 		String vnp_CreateDate = formatter.format(cld.getTime());
 		vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
-		cld.add(Calendar.MINUTE, 2);
+		cld.add(Calendar.MINUTE, 10);
 		String vnp_ExpireDate = formatter.format(cld.getTime());
 		vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
 
