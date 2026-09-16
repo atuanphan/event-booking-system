@@ -5,11 +5,20 @@ import toast from 'react-hot-toast';
 import api, { setAccessToken } from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 
+// Chỉ chấp nhận returnUrl dạng relative path nội bộ (chống open-redirect).
+// Chặn cả "//evil.com" (browser hiểu là protocol-relative URL) và URL tuyệt đối.
+const isSafeReturnUrl = (url) => {
+  if (!url) return false;
+  if (!url.startsWith('/')) return false;
+  if (url.startsWith('//')) return false;
+  return true;
+};
+
 export default function OAuthCallbackPage() {
   const navigate = useNavigate();
   const [status, setStatus] = useState('processing');
   const calledRef = useRef(false);
-  const { setUserData } = useAuth();
+  const { setUserData, clearSession } = useAuth();
 
   useEffect(() => {
     if (calledRef.current) return;
@@ -18,7 +27,9 @@ export default function OAuthCallbackPage() {
     const fetchUser = async () => {
       const params = new URLSearchParams(window.location.search);
       const code = params.get('code');
+
       if (!code) return navigate('/login');
+
       try {
         const { data } = await api.post('/auth/oauth/exchange', { code }, { _skipAuth: true });
         setAccessToken(data.accessToken); // lưu vào memory
@@ -32,8 +43,9 @@ export default function OAuthCallbackPage() {
 
         window.history.replaceState({}, '', window.location.pathname);
 
-        const returnUrl = sessionStorage.getItem('returnUrl');
-        sessionStorage.removeItem('returnUrl'); 
+        const rawReturnUrl = sessionStorage.getItem('returnUrl');
+        sessionStorage.removeItem('returnUrl');
+        const returnUrl = isSafeReturnUrl(rawReturnUrl) ? rawReturnUrl : null;
 
         if (user.roles?.includes('ADMIN')) {
           navigate('/admin', { replace: true });
@@ -42,13 +54,14 @@ export default function OAuthCallbackPage() {
         }
       } catch (err) {
         console.error('OAuth callback error:', err);
-        localStorage.removeItem('user');
+        toast.error('Đăng nhập thất bại, vui lòng thử lại.');
+        clearSession(); // dọn cả localStorage lẫn user state, không chỉ localStorage
         setStatus('error');
       }
     };
 
     fetchUser();
-  }, [navigate, setUserData]);
+  }, [navigate, setUserData, clearSession]);
 
   if (status === 'processing') {
     return (

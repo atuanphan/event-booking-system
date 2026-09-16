@@ -1,22 +1,30 @@
 package com.jonet.eventbooking.service.impl;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.jonet.eventbooking.converter.EventMapper;
 import com.jonet.eventbooking.customexception.EntityNotFoundException;
+import com.jonet.eventbooking.dto.TopSellingEventDTO;
 import com.jonet.eventbooking.dto.UploadResult;
 import com.jonet.eventbooking.dto.request.event.EventRequest;
 import com.jonet.eventbooking.dto.request.event.EventSearchRequest;
+import com.jonet.eventbooking.dto.request.event.PublicEventSearchRequest;
 import com.jonet.eventbooking.dto.response.event.EventDetailResponse;
 import com.jonet.eventbooking.dto.response.event.EventResponse;
 import com.jonet.eventbooking.entity.EventEntity;
 import com.jonet.eventbooking.repository.EventRepository;
+import com.jonet.eventbooking.repository.specification.EventSpecifications;
 import com.jonet.eventbooking.service.EventService;
 import com.jonet.eventbooking.service.ImageService;
 import com.jonet.eventbooking.service.TicketTypeService;
@@ -39,6 +47,16 @@ public class EventServiceImpl implements EventService {
 	public Page<EventResponse> getEvents(EventSearchRequest eventRequest, Pageable pageable) {
 		Page<EventEntity> events = eventRepository.findAll(pageable);
 		return events.map(eventMapper::toEventResponse);
+	}
+
+	@Override
+	public Page<EventResponse> getEvents(PublicEventSearchRequest eventSearchRequest, Pageable pageable) {
+		Specification<EventEntity> spec = Specification.allOf(EventSpecifications.hasId(eventSearchRequest.getId()))
+            .and(EventSpecifications.nameContains(eventSearchRequest.getName()))
+            .and(EventSpecifications.venueNameEquals(eventSearchRequest.getVenue()))
+            .and(EventSpecifications.startTimeAfter(eventSearchRequest.getStartTime()));
+		Page<EventEntity> events = eventRepository.findAll(spec, pageable); 
+		return events.map(eventMapper::eventResponse);
 	}
 
 	@Override
@@ -99,8 +117,21 @@ public class EventServiceImpl implements EventService {
 	}
 
 	@Override
-	public List<EventResponse> getEvents(String name) {
-		List<EventEntity> events = eventRepository.findAll();
-		return events.stream().map(eventMapper::toEventResponse).toList();
+	public List<EventResponse> getTopEvents() {
+		List<TopSellingEventDTO> soldEvents = eventRepository.findTopSellingEvents(PageRequest.of(0, 4));
+		if (soldEvents.isEmpty()) {
+			return List.of();
+		}
+
+		List<UUID> eventIds = soldEvents.stream().map(TopSellingEventDTO::eventId).toList();
+		Map<UUID, Integer> eventOrder = eventIds.stream()
+				.collect(Collectors.toMap(Function.identity(), eventIds::indexOf));
+
+		return eventRepository.findAllById(eventIds).stream()
+				.sorted((first, second) -> Integer.compare(
+						eventOrder.get(first.getId()),
+						eventOrder.get(second.getId())))
+				.map(eventMapper::toEventResponse)
+				.toList();
 	}
 }

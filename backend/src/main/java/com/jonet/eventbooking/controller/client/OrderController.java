@@ -12,6 +12,7 @@ import com.jonet.eventbooking.dto.request.order.OrderRequest;
 import com.jonet.eventbooking.service.OrderService;
 import com.jonet.eventbooking.service.impl.VNPayServiceImpl;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -22,8 +23,8 @@ public class OrderController {
 	private final VNPayServiceImpl vnpService;
 	
 	@PostMapping
-	public ResponseEntity<String> order(@RequestBody OrderRequest orderRequest) throws UnsupportedEncodingException {
+	public ResponseEntity<String> order(@RequestBody OrderRequest orderRequest, HttpServletRequest request) throws UnsupportedEncodingException {
 		orderService.createOrder(orderRequest);
-		return ResponseEntity.ok(vnpService.createPaymentUrl(orderRequest));
+		return ResponseEntity.ok(vnpService.createPaymentUrl(orderRequest, request));
 	}
 }

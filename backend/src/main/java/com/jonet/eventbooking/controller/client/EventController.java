@@ -2,13 +2,14 @@ package com.jonet.eventbooking.controller.client;
 
 import java.util.UUID;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.jonet.eventbooking.dto.request.event.PublicEventSearchRequest;
 import com.jonet.eventbooking.dto.response.event.EventDetailResponse;
 import com.jonet.eventbooking.service.EventService;
 
@@ -21,8 +22,13 @@ public class EventController {
 	private final EventService eventService;
 	
 	@GetMapping
-	public ResponseEntity<?> getEvents(@RequestParam(name = "name", required = false) String name) {
-		return ResponseEntity.ok(eventService.getEvents(name));
+	public ResponseEntity<?> getEvents(PublicEventSearchRequest request) {
+		return ResponseEntity.ok(eventService.getEvents(request, PageRequest.of(request.getPage(), request.getPageSize())));
+	}
+
+	@GetMapping("/top")
+	public ResponseEntity<?> getTopEvents() {
+		return ResponseEntity.ok(eventService.getTopEvents());
 	}
 
 	@GetMapping("/{id}")

@@ -7,5 +7,5 @@ import lombok.Setter;
 @Setter
 public class AbstractDTO {
 	private int page = 1;
-	private int pageSize = 10;
+	private int pageSize = 8;
 }
