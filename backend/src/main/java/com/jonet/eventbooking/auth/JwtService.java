@@ -54,8 +54,8 @@ public class JwtService {
 		redisTemplate.opsForValue().set("refresh-token:" + token, payload, Duration.ofMillis(refreshTokenExpiry));
         return ResponseCookie.from("refresh_token", token)
         		.httpOnly(true)
-        		.secure(false)
-        		.sameSite("Lax")
+        		.secure(true)
+        		.sameSite("None")
         		.path("/")
         		.maxAge(Duration.ofMillis(refreshTokenExpiry))
         		.build();
