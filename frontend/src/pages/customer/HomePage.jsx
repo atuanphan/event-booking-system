@@ -35,7 +35,7 @@ export default function HomePage() {
   const fetchEvents = async (category = activeCategory) => {
     setLoading(true);
     try {
-      const { data } = await api.get('/events', {
+      const { data } = await api.get('/events/top', {
         params: {
           name: search || undefined,
         },

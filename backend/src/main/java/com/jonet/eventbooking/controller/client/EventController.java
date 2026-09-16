@@ -25,6 +25,11 @@ public class EventController {
 		return ResponseEntity.ok(eventService.getEvents(name));
 	}
 
+	@GetMapping("/top")
+	public ResponseEntity<?> getTopEvents() {
+		return ResponseEntity.ok(eventService.getTopEvents());
+	}
+
 	@GetMapping("/{id}")
 	public ResponseEntity<EventDetailResponse> eventDetailById(@PathVariable UUID id) {
 		return ResponseEntity.ok(eventService.getEventDetailById(id));
