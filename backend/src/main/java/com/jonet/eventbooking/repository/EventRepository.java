@@ -21,7 +21,7 @@ public interface EventRepository extends JpaRepository<EventEntity, UUID> {
 	public void softDeleteEvents(@Param("ids") List<UUID> ids);
 
 	@Query("""
-		SELECT new com.jonet.eventbooking.dto.EventSoldDTO(
+		SELECT new com.jonet.eventbooking.dto.TopSellingEventDTO(
 			    e.id,
 			    e.name,
 			    SUM(oi.quantity))
