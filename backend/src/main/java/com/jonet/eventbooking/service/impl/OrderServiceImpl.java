@@ -40,7 +40,7 @@ public class OrderServiceImpl implements OrderService {
 	private final String redisKey = "ticket:stock:";
 
 	@Override
-	public void createOrder(OrderRequest orderRequest) {
+	public UUID createOrder(OrderRequest orderRequest) {
 		OrderEntity orderEntity = OrderEntity.builder().user(new UserEntity(orderRequest.getUserId()))
 				.status(orderRequest.getStatus()).expiresAt(LocalDateTime.now().plusMinutes(15)).build();
 		List<OrderItemsEntity> orderItemsEntities = orderRequest.getOrderItems().stream().map(req -> {
@@ -50,12 +50,16 @@ public class OrderServiceImpl implements OrderService {
 			return OrderItemsEntity.builder().order(orderEntity).ticketType(ticket).price(ticket.getPrice())
 					.quantity(req.getQuantity()).build();
 		}).collect(Collectors.toList());
+
 		BigDecimal totalAmount = orderItemsEntities.stream()
 				.map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
 				.reduce(BigDecimal.ZERO, BigDecimal::add);
+				
 		orderEntity.setOrderItems(orderItemsEntities);
 		orderEntity.setTotalAmount(totalAmount);
 		orderRepository.save(orderEntity);
+
+		return orderEntity.getId();
 	}
 
 	@Override

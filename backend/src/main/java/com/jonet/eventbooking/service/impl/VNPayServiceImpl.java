@@ -40,10 +40,10 @@ public class VNPayServiceImpl implements PaymentService {
 	private static final String VNP_COMMAND = "pay";
 
 	@Override
-	public String createPaymentUrl(OrderRequest orderRequest, HttpServletRequest request) throws UnsupportedEncodingException {
+	public String createPaymentUrl(UUID orderId, HttpServletRequest request) throws UnsupportedEncodingException {
 		String orderType = "190003";// lấy theo danh mục sản phẩm của vnpay
 		String bankCode = "NCB";
-		OrderMinInfo order = orderRepository.getOrderByUser(orderRequest.getUserId());
+		OrderMinInfo order = orderRepository.getOrderById(orderId);
 		UUID vnp_TxnRef = order.getId();
 
 		String vnp_TmnCode = vnpayProperties.tmnCode();

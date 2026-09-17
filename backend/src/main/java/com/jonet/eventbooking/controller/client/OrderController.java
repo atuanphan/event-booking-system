@@ -1,6 +1,7 @@
 package com.jonet.eventbooking.controller.client;
 
 import java.io.UnsupportedEncodingException;
+import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,7 +25,7 @@ public class OrderController {
 	
 	@PostMapping
 	public ResponseEntity<String> order(@RequestBody OrderRequest orderRequest, HttpServletRequest request) throws UnsupportedEncodingException {
-		orderService.createOrder(orderRequest);
-		return ResponseEntity.ok(vnpService.createPaymentUrl(orderRequest, request));
+		UUID orderId = orderService.createOrder(orderRequest);
+		return ResponseEntity.ok(vnpService.createPaymentUrl(orderId, request));
 	}
 }
