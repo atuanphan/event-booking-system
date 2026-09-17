@@ -9,6 +9,7 @@ import EventsPage from './pages/customer/EventsPage';
 import EventDetailPage from './pages/customer/EventDetailPage';
 import CheckoutPage from './pages/customer/CheckoutPage';
 import PaymentSuccessPage from './pages/customer/PaymentSuccessPage';
+import MyTicketsPage from './pages/customer/MyTicketsPage';
 import LoginPage from './pages/customer/LoginPage';
 import RegisterPage from './pages/customer/RegisterPage';
 
@@ -54,6 +55,9 @@ export default function App() {
         <Route path="/events/:id" element={<EventDetailPage />} />
         <Route path="/checkout" element={
           <ProtectedRoute><CheckoutPage /></ProtectedRoute>
+        } />
+        <Route path="/my-tickets" element={
+          <ProtectedRoute><MyTicketsPage /></ProtectedRoute>
         } />
         <Route path="/payment/success" element={<PaymentSuccessPage />} />
         <Route path="/login" element={<LoginPage />} />
