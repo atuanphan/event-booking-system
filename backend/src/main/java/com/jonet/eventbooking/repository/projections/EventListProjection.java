@@ -1,4 +1,4 @@
-package com.jonet.eventbooking.projections;
+package com.jonet.eventbooking.repository.projections;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

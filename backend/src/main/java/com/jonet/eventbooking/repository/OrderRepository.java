@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.jonet.eventbooking.entity.OrderEntity;
-import com.jonet.eventbooking.projections.OrderMinInfo;
+import com.jonet.eventbooking.repository.projections.OrderMinInfo;
 
 import jakarta.transaction.Transactional;
 

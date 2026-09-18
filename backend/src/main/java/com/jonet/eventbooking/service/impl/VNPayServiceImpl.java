@@ -19,10 +19,9 @@ import org.springframework.stereotype.Service;
 
 import com.jonet.eventbooking.config.VNPayConfig;
 import com.jonet.eventbooking.config.VnpayProperties;
-import com.jonet.eventbooking.dto.request.order.OrderRequest;
 import com.jonet.eventbooking.dto.request.payment.VNPayReturnRequest;
-import com.jonet.eventbooking.projections.OrderMinInfo;
 import com.jonet.eventbooking.repository.OrderRepository;
+import com.jonet.eventbooking.repository.projections.OrderMinInfo;
 import com.jonet.eventbooking.service.PaymentService;
 import com.jonet.eventbooking.utils.VNPayUtils;
 
