@@ -59,6 +59,7 @@ public class SecurityConfig {
 					.requestMatchers("/v1/auth/login", "/v1/auth/refresh", "/v1/auth/oauth/exchange").permitAll()
 					.requestMatchers("/v1/auth/register").permitAll()
 					.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+					.requestMatchers("/v1/payment/vnpay/ipn", "/v1/payment/vnpay/callback").permitAll()
 					.requestMatchers("/v1/auth/me", "/v1/payment/**").authenticated()
 		    	    .anyRequest().authenticated())
 			.oauth2Login(oauth2 -> oauth2

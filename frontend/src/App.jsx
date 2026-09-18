@@ -59,7 +59,7 @@ export default function App() {
         <Route path="/my-tickets" element={
           <ProtectedRoute><MyTicketsPage /></ProtectedRoute>
         } />
-        <Route path="/payment/success" element={<PaymentSuccessPage />} />
+        <Route path="/payment/vnpay/callback" element={<PaymentSuccessPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/oauth-callback" element={<OAuthCallbackPage />} />
