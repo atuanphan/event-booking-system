@@ -9,9 +9,11 @@ import java.util.stream.Collectors;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import com.jonet.eventbooking.converter.OrderMapper;
 import com.jonet.eventbooking.customexception.EntityNotFoundException;
 import com.jonet.eventbooking.dto.request.order.OrderRequest;
 import com.jonet.eventbooking.dto.request.payment.VNPayReturnRequest;
+import com.jonet.eventbooking.dto.response.order.OrderResponse;
 import com.jonet.eventbooking.entity.OrderEntity;
 import com.jonet.eventbooking.entity.OrderItemsEntity;
 import com.jonet.eventbooking.entity.TicketTypeEntity;
@@ -38,6 +40,7 @@ public class OrderServiceImpl implements OrderService {
 	private final StringRedisTemplate redisTemplate;
 	private final OrderItemRepository orderItemRepository;
 	private final String redisKey = "ticket:stock:";
+	private final OrderMapper orderMapper;
 
 	@Override
 	public UUID createOrder(OrderRequest orderRequest) {
@@ -89,6 +92,12 @@ public class OrderServiceImpl implements OrderService {
 			});
 
 		}
+	}
+
+	@Override
+	public List<OrderResponse> myTickets(UUID userId) {
+		List<OrderEntity> orderEntities = orderRepository.findByUserId(userId);
+		return orderMapper.toResponseList(orderEntities);
 	}
 
 }

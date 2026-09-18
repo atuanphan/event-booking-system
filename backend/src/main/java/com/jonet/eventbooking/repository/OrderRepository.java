@@ -1,5 +1,6 @@
 package com.jonet.eventbooking.repository;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -29,4 +30,6 @@ public interface OrderRepository extends JpaRepository<OrderEntity, UUID>{
 	OrderMinInfo getOrderById(@Param("id") UUID id);
 
 	void deleteByStatus(String status);
+
+	List<OrderEntity> findByUserId(UUID userId);
 }
