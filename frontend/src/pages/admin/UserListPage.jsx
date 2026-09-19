@@ -2,16 +2,21 @@ import { useState, useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
+import Pagination from '../../components/Pagination';
 import Modal from '../../components/Modal';
+
+const PAGE_SIZE = 8;
 
 export default function UserListPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   useEffect(() => { fetchUsers(); }, []);
 
   const fetchUsers = async () => {
+    setLoading(true);
     try {
       const { data } = await api.get('/admin/users');
       setUsers(data || []);
@@ -21,6 +26,13 @@ export default function UserListPage() {
       setLoading(false);
     }
   };
+
+  const totalPages = Math.max(1, Math.ceil(users.length / PAGE_SIZE));
+  const paginatedUsers = users.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
@@ -52,9 +64,9 @@ export default function UserListPage() {
           <tbody>
             {loading ? (
               <tr><td colSpan={5} className="p-8 text-center text-gray-400">Đang tải...</td></tr>
-            ) : users.length === 0 ? (
+            ) : paginatedUsers.length === 0 ? (
               <tr><td colSpan={5} className="p-8 text-center text-gray-400">Không có người dùng</td></tr>
-            ) : users.map((user) => (
+            ) : paginatedUsers.map((user) => (
               <tr key={user.id} className="border-t hover:bg-gray-50">
                 <td className="p-3 font-medium">{user.fullname}</td>
                 <td className="p-3 text-gray-500">{user.email}</td>
@@ -76,6 +88,8 @@ export default function UserListPage() {
           </tbody>
         </table>
       </div>
+
+      <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
 
       <Modal isOpen={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Xác nhận xóa">
         <p className="mb-4">Bạn có chắc muốn xóa người dùng <strong>{deleteTarget?.fullname}</strong>?</p>

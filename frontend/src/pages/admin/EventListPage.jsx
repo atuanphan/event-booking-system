@@ -33,7 +33,7 @@ export default function EventListPage() {
       const { data } = await api.get('/admin/events', {
         params: {
           page,
-          pageSize: 10,
+          pageSize: 8,
           name: search || undefined,
         },
       });
@@ -47,7 +47,11 @@ export default function EventListPage() {
     }
   };
 
-  const handleSearch = (e) => { e.preventDefault(); setPage(1); fetchEvents(); };
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (page === 1) fetchEvents();
+    else setPage(1);
+  };
 
   const toggleSelect = (id) => {
     setSelectedIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
