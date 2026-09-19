@@ -19,12 +19,21 @@ export default function PaymentSuccessPage() {
     }
 
     api
-      .get('/payment/vnpay/callback', { params })
+      .get('/payment/vnpay/ipn', { params })
       .then(({ data }) => {
         if (!isCurrentRequest) return;
 
-        const status = typeof data === 'string' ? data.toUpperCase() : data?.status?.toUpperCase();
-        setPaymentStatus(status === 'COMPLETED' ? 'completed' : status === 'CANCELLED' ? 'cancelled' : 'error');
+        const responseCode = typeof data === 'string'
+          ? data
+          : data?.RspCode ?? data?.rspCode;
+        const status = responseCode?.toUpperCase();
+        setPaymentStatus(
+          status === '00'
+            ? 'completed'
+            : status === '02'
+              ? 'cancelled'
+              : 'error'
+        );
       })
       .catch(() => {
         if (isCurrentRequest) setPaymentStatus('error');
