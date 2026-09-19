@@ -119,6 +119,9 @@ export default function Layout() {
       <footer className="bg-white border-t mt-auto">
         <div className="max-w-7xl mx-auto px-4 py-6 text-center text-sm text-gray-500">
           &copy; 2026 OmniTicket. Hệ thống đặt vé sự kiện.
+          <div className="mt-2 font-semibold tracking-wide">
+            — Jonet Enterprises —
+          </div>
         </div>
       </footer>
     </div>

@@ -26,7 +26,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center px-4">
+    <div className="min-h-[70vh] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Đăng ký</h1>
@@ -40,7 +40,7 @@ export default function RegisterPage() {
               type="text"
               {...register('fullname', { required: 'Họ tên là bắt buộc' })}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-              placeholder="Nguyễn Văn A"
+              placeholder="Anh Tuan Phan"
             />
             {errors.fullname && <p className="text-red-500 text-sm mt-1">{errors.fullname.message}</p>}
           </div>
