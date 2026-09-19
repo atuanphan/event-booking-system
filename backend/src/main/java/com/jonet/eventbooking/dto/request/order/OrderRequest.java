@@ -11,6 +11,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class OrderRequest {
+	private UUID id;
 	private UUID userId;
 	private String status = OrderStatus.PENDING.name();
 	private List<OrderItemsRequest> orderItems;

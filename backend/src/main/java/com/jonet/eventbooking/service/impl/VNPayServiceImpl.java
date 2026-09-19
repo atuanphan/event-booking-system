@@ -19,10 +19,9 @@ import org.springframework.stereotype.Service;
 
 import com.jonet.eventbooking.config.VNPayConfig;
 import com.jonet.eventbooking.config.VnpayProperties;
-import com.jonet.eventbooking.dto.request.order.OrderRequest;
 import com.jonet.eventbooking.dto.request.payment.VNPayReturnRequest;
-import com.jonet.eventbooking.projections.OrderMinInfo;
 import com.jonet.eventbooking.repository.OrderRepository;
+import com.jonet.eventbooking.repository.projections.OrderMinInfo;
 import com.jonet.eventbooking.service.PaymentService;
 import com.jonet.eventbooking.utils.VNPayUtils;
 
@@ -40,10 +39,10 @@ public class VNPayServiceImpl implements PaymentService {
 	private static final String VNP_COMMAND = "pay";
 
 	@Override
-	public String createPaymentUrl(OrderRequest orderRequest, HttpServletRequest request) throws UnsupportedEncodingException {
+	public String createPaymentUrl(UUID orderId, HttpServletRequest request) throws UnsupportedEncodingException {
 		String orderType = "190003";// lấy theo danh mục sản phẩm của vnpay
 		String bankCode = "NCB";
-		OrderMinInfo order = orderRepository.getOrderByUser(orderRequest.getUserId());
+		OrderMinInfo order = orderRepository.getOrderById(orderId);
 		UUID vnp_TxnRef = order.getId();
 
 		String vnp_TmnCode = vnpayProperties.tmnCode();

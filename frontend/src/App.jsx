@@ -9,6 +9,7 @@ import EventsPage from './pages/customer/EventsPage';
 import EventDetailPage from './pages/customer/EventDetailPage';
 import CheckoutPage from './pages/customer/CheckoutPage';
 import PaymentSuccessPage from './pages/customer/PaymentSuccessPage';
+import MyTicketsPage from './pages/customer/MyTicketsPage';
 import LoginPage from './pages/customer/LoginPage';
 import RegisterPage from './pages/customer/RegisterPage';
 
@@ -55,7 +56,11 @@ export default function App() {
         <Route path="/checkout" element={
           <ProtectedRoute><CheckoutPage /></ProtectedRoute>
         } />
-        <Route path="/payment/success" element={<PaymentSuccessPage />} />
+        <Route path="/my-tickets" element={
+          <ProtectedRoute><MyTicketsPage /></ProtectedRoute>
+        } />
+        <Route path="/payment/vnpay/callback" element={<PaymentSuccessPage />} />
+        <Route path="/payment/vnpay/ipn" element={<PaymentSuccessPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/oauth-callback" element={<OAuthCallbackPage />} />

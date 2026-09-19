@@ -1,15 +1,19 @@
 package com.jonet.eventbooking.repository;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.jonet.eventbooking.entity.OrderEntity;
-import com.jonet.eventbooking.projections.OrderMinInfo;
+import com.jonet.eventbooking.repository.projections.OrderMinInfo;
 
+import jakarta.persistence.LockModeType;
 import jakarta.transaction.Transactional;
 
 @Transactional
@@ -29,4 +33,10 @@ public interface OrderRepository extends JpaRepository<OrderEntity, UUID>{
 	OrderMinInfo getOrderById(@Param("id") UUID id);
 
 	void deleteByStatus(String status);
+
+	List<OrderEntity> findByUserId(UUID userId);
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT o FROM OrderEntity o WHERE o.id = :id")
+    Optional<OrderEntity> findByIdForUpdate(@Param("id") UUID id);
 }
