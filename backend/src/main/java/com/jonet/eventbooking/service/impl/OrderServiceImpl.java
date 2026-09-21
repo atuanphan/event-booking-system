@@ -48,20 +48,28 @@ public class OrderServiceImpl implements OrderService {
 
 	@Override
 	public UUID createOrder(OrderRequest orderRequest) {
-		OrderEntity orderEntity = OrderEntity.builder().user(new UserEntity(orderRequest.getUserId()))
-				.status(orderRequest.getStatus()).expiresAt(LocalDateTime.now().plusMinutes(15)).build();
+		OrderEntity orderEntity = OrderEntity.builder()
+		        .user(new UserEntity(orderRequest.getUserId()))
+				.status(orderRequest.getStatus())
+				.expiresAt(LocalDateTime.now().plusMinutes(15))
+				.build();
 		List<OrderItemsEntity> orderItemsEntities = orderRequest.getOrderItems().stream().map(req -> {
 			TicketTypeEntity ticket = ticketTypeRepository.findById(req.getTicketTypeId())
 					.orElseThrow(() -> new EntityNotFoundException("Ticket not found"));
 			ticketTypeService.updateAvailableQuantity(ticket.getId(), req.getQuantity());
-			return OrderItemsEntity.builder().order(orderEntity).ticketType(ticket).price(ticket.getPrice())
-					.quantity(req.getQuantity()).build();
+
+			return OrderItemsEntity.builder()
+			        .order(orderEntity)
+				    .ticketType(ticket)
+					.price(ticket.getPrice())
+					.quantity(req.getQuantity())
+					.build();
 		}).collect(Collectors.toList());
 
 		BigDecimal totalAmount = orderItemsEntities.stream()
 				.map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
 				.reduce(BigDecimal.ZERO, BigDecimal::add);
-				
+
 		orderEntity.setOrderItems(orderItemsEntities);
 		orderEntity.setTotalAmount(totalAmount);
 		orderRepository.save(orderEntity);
