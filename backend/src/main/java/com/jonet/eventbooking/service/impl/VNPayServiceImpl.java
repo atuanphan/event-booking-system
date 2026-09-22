@@ -5,6 +5,9 @@ import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -15,11 +18,20 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
 
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 
 import com.jonet.eventbooking.config.VNPayConfig;
 import com.jonet.eventbooking.config.VnpayProperties;
+import com.jonet.eventbooking.customexception.VNPayQueryDrException;
+import com.jonet.eventbooking.dto.request.payment.VNPayQueryRequest;
 import com.jonet.eventbooking.dto.request.payment.VNPayReturnRequest;
+import com.jonet.eventbooking.dto.response.payment.VNPayQueryResponse;
 import com.jonet.eventbooking.repository.OrderRepository;
 import com.jonet.eventbooking.repository.projections.OrderMinInfo;
 import com.jonet.eventbooking.service.PaymentService;
@@ -27,16 +39,20 @@ import com.jonet.eventbooking.utils.VNPayUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j 
 public class VNPayServiceImpl implements PaymentService {
 	private final OrderRepository orderRepository;
 	private final VNPayConfig vnPayConfig;
 	private final VnpayProperties vnpayProperties;
+	private final RestTemplate restTemplate = new RestTemplate();
 
 	private static final String VNP_VERSION = "2.1.0";
 	private static final String VNP_COMMAND = "pay";
+	private static final DateTimeFormatter VNP_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
 	@Override
 	public String createPaymentUrl(UUID orderId, HttpServletRequest request) throws UnsupportedEncodingException {
@@ -113,4 +129,64 @@ public class VNPayServiceImpl implements PaymentService {
 		return check;
 	}
 
+	@Override
+	public VNPayQueryResponse queryTransaction(UUID orderId, LocalDateTime orderCreatedAt, String orderInfo, String clientIp) {
+		String requestId = UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+		String createDate = LocalDateTime.now().format(VNP_DATE_FORMAT);
+		String transactionDate = orderCreatedAt.atZone(ZoneId.of("Asia/Ho_Chi_Minh")).toLocalDateTime().format(VNP_DATE_FORMAT);
+		String txnRef = orderId.toString();
+
+		String secureHash = buildSecureHash(
+				requestId, vnpayProperties.tmnCode(), txnRef, transactionDate, createDate, clientIp, orderInfo);
+
+		VNPayQueryRequest request = VNPayQueryRequest.builder()
+				.vnp_RequestId(requestId)
+				.vnp_Version(VNP_VERSION)
+				.vnp_Command("querydr")
+				.vnp_TmnCode(vnpayProperties.tmnCode())
+				.vnp_TxnRef(txnRef)
+				.vnp_OrderInfo(orderInfo)
+				.vnp_TransactionDate(transactionDate)
+				.vnp_CreateDate(createDate)
+				.vnp_IpAddr(clientIp)
+				.vnp_SecureHash(secureHash)
+				.build();
+
+		try {
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<VNPayQueryRequest> entity = new HttpEntity<>(request, headers);
+
+			ResponseEntity<VNPayQueryResponse> response = restTemplate.postForEntity(
+					vnpayProperties.queryDrUrl(), entity, VNPayQueryResponse.class);
+
+			VNPayQueryResponse body = response.getBody();
+			log.info("queryDr order={} -> responseCode={}, transactionStatus={}",
+					orderId,
+					body != null ? body.getVnp_ResponseCode() : null,
+					body != null ? body.getVnp_TransactionStatus() : null);
+
+			return body;
+		} catch (RestClientException e) {
+			log.error("Gọi queryDr thất bại cho order {}", orderId, e);
+			throw new VNPayQueryDrException("Không thể gọi queryDr: ");
+		}
+	}
+
+	private String buildSecureHash(String requestId, String tmnCode, String txnRef,
+                                     String transactionDate, String createDate,
+                                     String ipAddr, String orderInfo) {
+        String  hashData = String.join("|",
+                requestId,
+                VNP_VERSION,
+                "querydr",
+                tmnCode,
+                txnRef,
+                transactionDate,
+                createDate,
+                ipAddr,
+                orderInfo
+        );
+        return vnPayConfig.hmacSHA512(vnpayProperties.hashSecret(), hashData);
+    }
 }

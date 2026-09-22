@@ -1,43 +1,24 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, CreditCard } from 'lucide-react';
 import toast from 'react-hot-toast';
-import api from '../../api/axios';
-import { useAuth } from '../../context/AuthContext';
-import { useState } from 'react';
 
 export default function CheckoutPage() {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
 
-  if (!state?.event || !state?.orderItems) {
+  if (!state?.event || !state?.orderItems || !state?.paymentUrl) {
     navigate('/');
     return null;
   }
 
-  const { event, orderItems, totalPrice } = state;
+  const { event, orderItems, totalPrice, paymentUrl } = state;
 
-  const handlePayment = async () => {
-    setLoading(true);
-    try {
-      const { data } = await api.post('/orders', {
-        userId: user.id,
-        status: 'PENDING',
-        orderItems: orderItems.map((item) => ({
-          ticketTypeId: item.ticketTypeId,
-          quantity: item.quantity,
-        })),
-      });
-      // data is the VNPay URL string
-      if (data) {
-        window.location.href = data;
-      }
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Đặt vé thất bại');
-    } finally {
-      setLoading(false);
+  const handlePayment = () => {
+    if (!paymentUrl) {
+      toast.error('Không thể tạo liên kết thanh toán');
+      return;
     }
+    window.location.href = paymentUrl;
   };
 
   return (
@@ -91,11 +72,10 @@ export default function CheckoutPage() {
       {/* Payment */}
       <button
         onClick={handlePayment}
-        disabled={loading}
-        className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
+        className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition flex items-center justify-center gap-2"
       >
         <CreditCard className="w-5 h-5" />
-        {loading ? 'Đang xử lý...' : 'Thanh toán qua VNPay'}
+        Thanh toán qua VNPay
       </button>
     </div>
   );

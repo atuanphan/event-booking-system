@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.jonet.eventbooking.dto.request.payment.VNPayReturnRequest;
-import com.jonet.eventbooking.dto.response.payment.response.VNPayIpnResponse;
+import com.jonet.eventbooking.dto.response.payment.VNPayIpnResponse;
 import com.jonet.eventbooking.service.OrderService;
 
 import lombok.RequiredArgsConstructor;

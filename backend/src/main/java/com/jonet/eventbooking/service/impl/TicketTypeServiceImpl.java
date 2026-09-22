@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import com.jonet.eventbooking.customexception.InsufficientTicketException;
 import com.jonet.eventbooking.entity.TicketTypeEntity;
 import com.jonet.eventbooking.service.TicketTypeService;
 
@@ -24,10 +25,10 @@ public class TicketTypeServiceImpl implements TicketTypeService {
 
 	@Override
 	public void updateAvailableQuantity(UUID ticketTypeId, int quantity) {
-		String rawData = (String) redisTemplate.opsForValue().get(redisKey + ticketTypeId);
-		int inventoryQuantity = Integer.parseInt(rawData);
-		if (inventoryQuantity > quantity) {
-			redisTemplate.opsForValue().decrement(redisKey + ticketTypeId, quantity);
+		Long availableQuantity = redisTemplate.opsForValue().decrement(redisKey + ticketTypeId, quantity);
+		if (availableQuantity < 0) {
+			redisTemplate.opsForValue().increment(redisKey + ticketTypeId, quantity);
+			throw new InsufficientTicketException("Not enough tickets available");
 		}
 	}
 

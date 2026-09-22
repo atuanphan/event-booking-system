@@ -15,7 +15,7 @@ import com.jonet.eventbooking.customexception.EntityNotFoundException;
 import com.jonet.eventbooking.dto.request.order.OrderRequest;
 import com.jonet.eventbooking.dto.request.payment.VNPayReturnRequest;
 import com.jonet.eventbooking.dto.response.order.OrderResponse;
-import com.jonet.eventbooking.dto.response.payment.response.VNPayIpnResponse;
+import com.jonet.eventbooking.dto.response.payment.VNPayIpnResponse;
 import com.jonet.eventbooking.entity.OrderEntity;
 import com.jonet.eventbooking.entity.OrderItemsEntity;
 import com.jonet.eventbooking.entity.TicketTypeEntity;
@@ -48,20 +48,28 @@ public class OrderServiceImpl implements OrderService {
 
 	@Override
 	public UUID createOrder(OrderRequest orderRequest) {
-		OrderEntity orderEntity = OrderEntity.builder().user(new UserEntity(orderRequest.getUserId()))
-				.status(orderRequest.getStatus()).expiresAt(LocalDateTime.now().plusMinutes(15)).build();
+		OrderEntity orderEntity = OrderEntity.builder()
+		        .user(new UserEntity(orderRequest.getUserId()))
+				.status(orderRequest.getStatus())
+				.expiresAt(LocalDateTime.now().plusMinutes(15))
+				.build();
 		List<OrderItemsEntity> orderItemsEntities = orderRequest.getOrderItems().stream().map(req -> {
 			TicketTypeEntity ticket = ticketTypeRepository.findById(req.getTicketTypeId())
 					.orElseThrow(() -> new EntityNotFoundException("Ticket not found"));
 			ticketTypeService.updateAvailableQuantity(ticket.getId(), req.getQuantity());
-			return OrderItemsEntity.builder().order(orderEntity).ticketType(ticket).price(ticket.getPrice())
-					.quantity(req.getQuantity()).build();
+
+			return OrderItemsEntity.builder()
+			        .order(orderEntity)
+				    .ticketType(ticket)
+					.price(ticket.getPrice())
+					.quantity(req.getQuantity())
+					.build();
 		}).collect(Collectors.toList());
 
 		BigDecimal totalAmount = orderItemsEntities.stream()
 				.map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
 				.reduce(BigDecimal.ZERO, BigDecimal::add);
-				
+
 		orderEntity.setOrderItems(orderItemsEntities);
 		orderEntity.setTotalAmount(totalAmount);
 		orderRepository.save(orderEntity);
