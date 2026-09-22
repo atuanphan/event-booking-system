@@ -15,7 +15,7 @@ import com.jonet.eventbooking.customexception.EntityNotFoundException;
 import com.jonet.eventbooking.dto.request.order.OrderRequest;
 import com.jonet.eventbooking.dto.request.payment.VNPayReturnRequest;
 import com.jonet.eventbooking.dto.response.order.OrderResponse;
-import com.jonet.eventbooking.dto.response.payment.response.VNPayIpnResponse;
+import com.jonet.eventbooking.dto.response.payment.VNPayIpnResponse;
 import com.jonet.eventbooking.entity.OrderEntity;
 import com.jonet.eventbooking.entity.OrderItemsEntity;
 import com.jonet.eventbooking.entity.TicketTypeEntity;

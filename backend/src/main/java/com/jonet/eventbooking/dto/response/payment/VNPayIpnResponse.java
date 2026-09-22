@@ -1,4 +1,4 @@
-package com.jonet.eventbooking.dto.response.payment.response;
+package com.jonet.eventbooking.dto.response.payment;
 
 import lombok.Builder;
 import lombok.Data;

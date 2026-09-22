@@ -12,5 +12,6 @@ public record VnpayProperties(
     @NotBlank String returnUrl,
     @NotBlank String tmnCode,
     @NotBlank String hashSecret,
-    @NotBlank String apiUrl
+    @NotBlank String apiUrl,
+    @NotBlank String queryDrUrl
 ) {}
