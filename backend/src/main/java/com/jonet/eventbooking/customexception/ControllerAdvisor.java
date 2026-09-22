@@ -89,4 +89,15 @@ public class ControllerAdvisor extends ResponseEntityExceptionHandler {
 				.path(request.getRequestURI())
 				.build());
 	}
+
+	@ExceptionHandler(exception = InsufficientTicketException.class)
+	public ResponseEntity<Object> handleInsufficientTicketException(InsufficientTicketException ex, HttpServletRequest request) {
+		return ResponseEntity.status(HttpStatus.CONFLICT).body(
+				ErrorMessage.builder()
+				.message(ex.getMessage())
+				.timestamp(LocalDateTime.now())
+				.status(HttpStatus.CONFLICT.value())
+				.path(request.getRequestURI())
+				.build());
+	}
 }
