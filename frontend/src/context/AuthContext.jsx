@@ -105,10 +105,11 @@ export function AuthProvider({ children }) {
   };
 
   const isAdmin = user?.roles?.includes('ADMIN') || user?.roles?.includes('STAFF');
+  const isOrganizer = user?.roles?.includes('ORGANIZER');
 
   return (
     <AuthContext.Provider
-      value={{ user, login, logout, register, isAdmin, loading, authReady, setUserData, clearSession }}
+      value={{ user, login, logout, register, isAdmin, isOrganizer, loading, authReady, setUserData, clearSession }}
     >
       {children}
     </AuthContext.Provider>
