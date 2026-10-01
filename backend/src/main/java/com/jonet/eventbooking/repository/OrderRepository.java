@@ -13,6 +13,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.jonet.eventbooking.entity.OrderEntity;
+import com.jonet.eventbooking.enums.OrderStatus;
 import com.jonet.eventbooking.repository.projections.OrderMinInfo;
 
 import jakarta.persistence.LockModeType;
@@ -27,7 +28,7 @@ public interface OrderRepository extends JpaRepository<OrderEntity, UUID>{
 	
 	@Modifying
 	@Query(value = "UPDATE orders SET status = :status WHERE id = :id", nativeQuery = true)
-	void updateOrderStatusById(@Param("id") UUID id, @Param("status") String stauts);
+	void updateOrderStatusById(@Param("id") UUID id, @Param("status") String status);
 	
 	@Query(value = """
 			SELECT o.id AS id, o.totalAmount AS totalAmount FROM OrderEntity o WHERE o.id = :id AND o.status = 'PENDING'
@@ -42,5 +43,5 @@ public interface OrderRepository extends JpaRepository<OrderEntity, UUID>{
     @Query("SELECT o FROM OrderEntity o WHERE o.id = :id")
     Optional<OrderEntity> findByIdForUpdate(@Param("id") UUID id);
 
-	List<OrderEntity> findByStatusAndExpiresAtBefore(String status, LocalDateTime expiresAt, Pageable pageable);
+	List<OrderEntity> findByStatusAndExpiresAtBefore(OrderStatus status, LocalDateTime expiresAt, Pageable pageable);
 }
