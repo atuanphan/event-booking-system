@@ -6,5 +6,5 @@ import com.jonet.eventbooking.entity.TicketTypeEntity;
 
 public interface TicketTypeService {
 	void updateTicketRedis(TicketTypeEntity ticketTypeEntity);
-	void updateAvailableQuantity(UUID ticketTypeId, int quantity);
+	int updateAvailableQuantity(UUID ticketTypeId, int quantity);
 }

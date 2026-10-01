@@ -53,6 +53,7 @@ public class SecurityConfig {
                                 .authenticationEntryPoint(jwtAuthenticationEntryPoint))
 		    .authorizeHttpRequests(auth -> auth
 				    .requestMatchers("/login").permitAll()
+				    .requestMatchers("/ws", "/ws/**").permitAll()
 		    	    .requestMatchers("/v1/admin/**").hasRole("ADMIN")
 		    	    .requestMatchers("/v1/checkin/**").hasAnyRole("STAFF", "ADMIN")
 		    	    .requestMatchers("/v1/events", "/v1/events/**").permitAll()

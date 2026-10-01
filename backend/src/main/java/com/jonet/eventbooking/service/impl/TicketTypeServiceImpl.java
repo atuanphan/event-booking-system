@@ -24,12 +24,13 @@ public class TicketTypeServiceImpl implements TicketTypeService {
 	}
 
 	@Override
-	public void updateAvailableQuantity(UUID ticketTypeId, int quantity) {
+	public int updateAvailableQuantity(UUID ticketTypeId, int quantity) {
 		Long availableQuantity = redisTemplate.opsForValue().decrement(redisKey + ticketTypeId, quantity);
 		if (availableQuantity < 0) {
 			redisTemplate.opsForValue().increment(redisKey + ticketTypeId, quantity);
 			throw new InsufficientTicketException("Not enough tickets available");
 		}
+		return Math.toIntExact(availableQuantity);
 	}
 
 }

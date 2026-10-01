@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Calendar, MapPin, Users, ArrowLeft, ShoppingCart } from 'lucide-react';
+import { Client } from '@stomp/stompjs';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
@@ -23,6 +24,14 @@ function formatDateTime(dateStr) {
   });
 }
 
+function getWebSocketUrl() {
+  const url = new URL(import.meta.env.VITE_API_URL || window.location.origin, window.location.origin);
+  url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+  url.pathname = `${url.pathname.replace(/\/$/, '')}/ws`;
+  url.search = '';
+  return url.toString();
+}
+
 export default function EventDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -35,6 +44,47 @@ export default function EventDetailPage() {
   useEffect(() => {
     fetchEvent();
   }, [id]);
+
+  useEffect(() => {
+    if (!event?.ticketTypes?.length) return undefined;
+
+    const client = new Client({
+      brokerURL: getWebSocketUrl(),
+      reconnectDelay: 5000,
+      onConnect: () => {
+        event.ticketTypes.forEach((ticketType) => {
+          client.subscribe(`/topic/events/${ticketType.id}/available`, (message) => {
+            const remainingQuantity = Number(message.body);
+            if (!Number.isInteger(remainingQuantity) || remainingQuantity < 0) return;
+
+            setEvent((currentEvent) => currentEvent ? {
+              ...currentEvent,
+              ticketTypes: currentEvent.ticketTypes.map((currentTicketType) => (
+                currentTicketType.id === ticketType.id
+                  ? { ...currentTicketType, availableQuantity: remainingQuantity }
+                  : currentTicketType
+              )),
+            } : currentEvent);
+
+            setSelectedTickets((currentSelection) => {
+              const selectedQuantity = currentSelection[ticketType.id] || 0;
+              if (selectedQuantity <= remainingQuantity) return currentSelection;
+
+              const nextSelection = { ...currentSelection };
+              if (remainingQuantity === 0) delete nextSelection[ticketType.id];
+              else nextSelection[ticketType.id] = remainingQuantity;
+              return nextSelection;
+            });
+          });
+        });
+      },
+    });
+
+    client.activate();
+    return () => {
+      client.deactivate();
+    };
+  }, [event?.id]);
 
   const fetchEvent = async () => {
     try {
