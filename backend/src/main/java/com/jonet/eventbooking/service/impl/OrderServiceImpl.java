@@ -168,7 +168,7 @@ public class OrderServiceImpl implements OrderService {
  
         OrderEntity order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("Order Not Found!"));
-		return order.getStatus();
+		return order.getStatus().name();
 	}
 
 }

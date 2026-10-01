@@ -10,6 +10,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.jonet.eventbooking.entity.UserEntity;
+import com.jonet.eventbooking.enums.RoleCode;
 
 import lombok.Builder;
 import lombok.Data;
@@ -23,7 +24,7 @@ public class MyUserDetails implements UserDetails{
 	private String password;
 	private String fullname;
 	private String email;
-	private List<String> roles;
+	private List<RoleCode> roles;
 	private String provider;
 	private boolean accountNonExpired;
 	private boolean accountNonLocked;
@@ -47,7 +48,7 @@ public class MyUserDetails implements UserDetails{
 	}
 
 	public static MyUserDetails build(UserEntity userEntity) {
-		List<String> roles = userEntity.getRoles().stream().map(role -> role.getCode()).collect(Collectors.toList());
+		List<RoleCode> roles = userEntity.getRoles().stream().map(role -> role.getCode()).collect(Collectors.toList());
 		List<GrantedAuthority> authorities = roles.stream()
 				.map(role -> new SimpleGrantedAuthority("ROLE_" + role)).collect(Collectors.toList());
 		return MyUserDetails.builder()

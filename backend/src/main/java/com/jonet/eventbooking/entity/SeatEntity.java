@@ -4,8 +4,12 @@ import java.util.UUID;
 
 import org.hibernate.annotations.UuidGenerator;
 
+import com.jonet.eventbooking.enums.SeatStatus;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -32,7 +36,8 @@ public class SeatEntity {
 	private String seatNumber;
 	
 	@Column(name = "status", length = 50)
-	private String status;
+	@Enumerated (EnumType.STRING)
+	private SeatStatus status;
 	
 	@Column(name = "version", nullable = false)
 	private Integer version;

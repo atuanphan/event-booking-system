@@ -6,9 +6,13 @@ import java.util.UUID;
 
 import org.hibernate.annotations.UuidGenerator;
 
+import com.jonet.eventbooking.enums.EventStatus;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -44,7 +48,8 @@ public class EventEntity {
 	private LocalDateTime endTime;
 	
 	@Column(name = "status", nullable = false, length = 50)
-	private String status;
+	@Enumerated(EnumType.STRING)
+	private EventStatus status;
 	
 	@Column(name = "image_url", length = 500)
 	private String imageUrl;
