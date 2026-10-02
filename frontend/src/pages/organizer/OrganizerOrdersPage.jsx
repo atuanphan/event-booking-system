@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Download, Search } from 'lucide-react';
-import { getMyEvents, getOrders } from '../../services/organizerApi';
+import { getMockMyEvents, getOrders } from '../../services/organizerApi';
 
 const money = (value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(value || 0);
 const statuses = { COMPLETED: 'Đã thanh toán', PENDING: 'Chờ thanh toán', CANCELLED: 'Đã hủy' };
@@ -11,7 +11,7 @@ export default function OrganizerOrdersPage() {
   const [orders, setOrders] = useState([]);
   const [filters, setFilters] = useState({ eventId: '', status: '', from: '', to: '' });
 
-  useEffect(() => { getMyEvents().then(setEvents); }, []);
+  useEffect(() => { getMockMyEvents().then(setEvents); }, []);
   useEffect(() => { getOrders(filters).then(setOrders); }, [filters]);
 
   const exportCsv = () => {

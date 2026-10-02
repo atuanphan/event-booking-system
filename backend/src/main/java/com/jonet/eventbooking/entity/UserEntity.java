@@ -69,4 +69,7 @@ public class UserEntity {
 
 	@OneToMany(mappedBy = "user")
 	private List<OrderEntity> orderEntities;
+
+	@OneToMany(mappedBy = "user")
+	private List<EventEntity> eventEntities;
 }

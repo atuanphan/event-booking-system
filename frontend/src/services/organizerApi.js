@@ -1,8 +1,4 @@
-const venues = [
-  { id: 'venue-1', name: 'Nhà hát Hòa Bình', address: 'TP. Hồ Chí Minh', capacity: 2500 },
-  { id: 'venue-2', name: 'Trung tâm Hội nghị Quốc gia', address: 'Hà Nội', capacity: 3800 },
-  { id: 'venue-3', name: 'Công viên Biển Đông', address: 'Đà Nẵng', capacity: 5000 },
-];
+import api from '../api/axios';
 
 let events = [
   {
@@ -50,52 +46,88 @@ const orders = [
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
-export async function getMyEvents() {
+export async function getMockMyEvents() {
   return clone(events).sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
 }
 
-export async function getEvent(id) {
-  const event = events.find((item) => item.id === id);
-  return event ? clone(event) : null;
+export async function getMyEvents(name = '') {
+  const [{ data }, venueItems] = await Promise.all([
+    api.get('/organizer/events', { params: { name } }),
+    getVenues(),
+  ]);
+
+  return (Array.isArray(data) ? data : []).map((event) => ({
+    ...event,
+    ticketTypes: event.ticketTypes || [],
+    venue: venueItems.find((venue) => venue.id === event.venueId) || {
+      id: event.venueId,
+      name: 'Địa điểm',
+      address: '',
+    },
+  }));
 }
 
 export async function getVenues() {
-  return clone(venues);
+  const { data } = await api.get('/organizer/events/venues', {
+    params: { page: 1, pageSize: 100 },
+  });
+  return data?.list || [];
 }
 
-export async function saveEvent(values) {
-  const venue = venues.find((item) => item.id === values.venueId);
-  const existingIndex = events.findIndex((item) => item.id === values.id);
-  const event = {
-    ...values,
-    id: values.id || `event-${Date.now()}`,
-    venue: venue ? { id: venue.id, name: venue.name, address: venue.address } : null,
-    ticketTypes: existingIndex >= 0 ? events[existingIndex].ticketTypes : [],
-  };
-  if (existingIndex >= 0) events[existingIndex] = event;
-  else events = [event, ...events];
-  return clone(event);
+export async function getEvent(id) {
+  const items = await getMyEvents();
+  return items.find((event) => event.id === id) || null;
 }
 
 export async function cancelEvent(id) {
-  events = events.map((event) => event.id === id ? { ...event, status: 'CANCELLED' } : event);
+  await api.delete(`/organizer/events/${id}`);
+}
+
+export async function saveEvent(values) {
+  const payload = {
+    id: values.id || undefined,
+    name: values.name,
+    description: values.description,
+    status: values.status,
+    venueId: values.venueId || values.venue?.id,
+    imageUrl: values.imageUrl?.startsWith('data:') ? '' : values.imageUrl || '',
+    startTime: values.startTime,
+    endTime: values.endTime,
+    ticketTypes: (values.ticketTypes || []).map((ticket) => ({
+      id: ticket.id || undefined,
+      name: ticket.name,
+      price: Number(ticket.price),
+      totalQuantity: Number(ticket.totalQuantity),
+      availableQuantity: Number(ticket.availableQuantity ?? ticket.totalQuantity),
+      seats: ticket.seats || [],
+    })),
+  };
+  const formData = new FormData();
+  formData.append('eventRequest', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
+  if (values.imageFile) formData.append('file', values.imageFile);
+
+  if (values.id) await api.put('/organizer/events', formData);
+  else await api.post('/organizer/events', formData);
+  return { id: values.id || null };
 }
 
 export async function saveTicketType(eventId, values) {
-  events = events.map((event) => {
-    if (event.id !== eventId) return event;
-    const ticket = { ...values, id: values.id || `ticket-${Date.now()}`, availableQuantity: values.availableQuantity ?? values.totalQuantity };
-    const ticketTypes = values.id
-      ? event.ticketTypes.map((item) => item.id === values.id ? ticket : item)
-      : [...event.ticketTypes, ticket];
-    return { ...event, ticketTypes };
-  });
+  const event = await getEvent(eventId);
+  if (!event) throw new Error('Event not found');
+  const ticketTypes = values.id
+    ? event.ticketTypes.map((ticket) => ticket.id === values.id ? values : ticket)
+    : [...event.ticketTypes, values];
+  return saveEvent({ ...event, venueId: event.venue?.id || event.venueId, ticketTypes });
 }
 
 export async function deleteTicketType(eventId, ticketId) {
-  events = events.map((event) => event.id === eventId
-    ? { ...event, ticketTypes: event.ticketTypes.filter((ticket) => ticket.id !== ticketId) }
-    : event);
+  const event = await getEvent(eventId);
+  if (!event) throw new Error('Event not found');
+  return saveEvent({
+    ...event,
+    venueId: event.venue?.id || event.venueId,
+    ticketTypes: event.ticketTypes.filter((ticket) => ticket.id !== ticketId),
+  });
 }
 
 export async function getOrders(filters = {}) {

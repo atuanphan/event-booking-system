@@ -21,4 +21,6 @@ public interface EventService {
 	public void delete(List<UUID> ids);
 	public EventDetailResponse getEventDetailById(UUID id);
 	public List<EventResponse> getTopEvents();
+
+	public List<EventResponse> getEventsByUserId(UUID userId, String name);
 }

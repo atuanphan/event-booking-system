@@ -18,7 +18,13 @@ export default function OrganizerEventDetailPage() {
   const [editingId, setEditingId] = useState(null);
   const [showForm, setShowForm] = useState(false);
 
-  const loadEvent = () => getEvent(id).then(setEvent).finally(() => setLoading(false));
+  const loadEvent = () => getEvent(id)
+    .then(setEvent)
+    .catch((error) => {
+      setEvent(null);
+      toast.error(error.response?.data?.message || 'Không thể tải thông tin sự kiện');
+    })
+    .finally(() => setLoading(false));
   useEffect(() => { loadEvent(); }, [id]);
 
   const startEdit = (ticket) => {
@@ -87,9 +93,9 @@ export default function OrganizerEventDetailPage() {
           </div>
           <button type="submit" className="px-3 py-2 bg-emerald-700 text-white rounded-md text-sm hover:bg-emerald-800">{editingId ? 'Lưu loại vé' : 'Thêm loại vé'}</button>
         </form>}
-        {event.ticketTypes.length === 0 ? <div className="py-12 text-center text-sm text-gray-400">Chưa có loại vé. Thêm loại vé để bắt đầu mở bán.</div> : <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-sm text-left"><thead className="bg-gray-50 text-xs uppercase text-gray-500"><tr><th className="px-5 py-3">Tên loại vé</th><th className="px-5 py-3">Giá</th><th className="px-5 py-3">Đã bán</th><th className="px-5 py-3">Còn lại / Tổng</th><th className="px-5 py-3 text-right">Thao tác</th></tr></thead><tbody>{event.ticketTypes.map((ticket) => <tr key={ticket.id} className="border-t border-gray-100"><td className="px-5 py-4 font-medium text-gray-800">{ticket.name}</td><td className="px-5 py-4 text-gray-600">{money(ticket.price)}</td><td className="px-5 py-4 text-gray-600">{(ticket.totalQuantity - ticket.availableQuantity).toLocaleString('vi-VN')}</td><td className="px-5 py-4 text-gray-600">{ticket.availableQuantity.toLocaleString('vi-VN')} / {ticket.totalQuantity.toLocaleString('vi-VN')}</td><td className="px-5 py-3"><div className="flex justify-end gap-1"><button type="button" title="Sửa loại vé" aria-label="Sửa loại vé" onClick={() => startEdit(ticket)} className="p-2 text-gray-500 hover:bg-gray-100 rounded-md"><Pencil className="w-4 h-4" /></button><button type="button" title="Xóa loại vé" aria-label="Xóa loại vé" onClick={() => handleDeleteTicket(ticket)} className="p-2 text-gray-500 hover:bg-rose-50 hover:text-rose-700 rounded-md"><Trash2 className="w-4 h-4" /></button></div></td></tr>)}</tbody></table></div>}
+        {event.ticketTypes.length === 0 ? <div className="py-12 text-center text-sm text-gray-400">Chưa có loại vé. Thêm loại vé để bắt đầu mở bán.</div> : <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-sm text-left"><thead className="bg-gray-50 text-xs uppercase text-gray-500"><tr><th className="px-5 py-3">Tên loại vé</th><th className="px-5 py-3">Giá</th><th className="px-5 py-3">Đã bán</th><th className="px-5 py-3">Còn lại / Tổng</th><th className="px-5 py-3 text-right">Thao tác</th></tr></thead><tbody>{event.ticketTypes.map((ticket) => <tr key={ticket.id} className="border-t border-gray-100"><td className="px-5 py-4 font-medium text-gray-800">{ticket.name}</td><td className="px-5 py-4 text-gray-600">{money(ticket.price)}</td><td className="px-5 py-4 text-gray-600">{(ticket.totalQuantity - ticket.availableQuantity).toLocaleString('vi-VN')}</td><td className="px-5 py-4 text-gray-600">{ticket.availableQuantity.toLocaleString('vi-VN')} / {ticket.totalQuantity.toLocaleString('vi-VN')}</td><td className="px-5 py-3"><div className="flex justify-end gap-1"><button type="button" title="Sửa loại vé" aria-label="Sửa loại vé" onClick={() => startEdit(ticket)} className="p-2 text-gray-500 hover:bg-gray-100 rounded-md"><Pencil className="w-4 h-4" /></button><button type="button" title={event.ticketTypes.length === 1 ? 'Sự kiện cần ít nhất một loại vé' : 'Xóa loại vé'} aria-label="Xóa loại vé" disabled={event.ticketTypes.length === 1} onClick={() => handleDeleteTicket(ticket)} className="p-2 text-gray-500 hover:bg-rose-50 hover:text-rose-700 rounded-md disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-500"><Trash2 className="w-4 h-4" /></button></div></td></tr>)}</tbody></table></div>}
       </section>
-      <p className="text-xs text-gray-400">Dữ liệu minh họa, chưa đồng bộ với hệ thống bán vé.</p>
+      <p className="text-xs text-gray-400">Thông tin sự kiện và loại vé được đồng bộ qua API Organizer.</p>
     </div>
   );
 }

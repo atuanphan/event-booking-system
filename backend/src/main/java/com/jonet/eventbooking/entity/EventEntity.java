@@ -63,4 +63,8 @@ public class EventEntity {
 
 	@OneToMany(mappedBy = "event", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
 	private List<TicketTypeEntity> ticketTypes;
+
+	@ManyToOne 
+	@JoinColumn(name = "user_id")
+	private UserEntity user;
 }
