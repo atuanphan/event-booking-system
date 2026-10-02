@@ -7,9 +7,12 @@ import java.util.UUID;
 import org.hibernate.annotations.UuidGenerator;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.jonet.eventbooking.enums.RoleCode;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
@@ -34,7 +37,8 @@ public class RoleEntity implements Serializable{
 	private String name;
 	
 	@Column(name = "code", length = 20, nullable = false, unique = false)
-	private String code;
+	@Enumerated(EnumType.STRING)
+	private RoleCode code;
 	
 	@ManyToMany(mappedBy = "roles")
 	@JsonIgnore

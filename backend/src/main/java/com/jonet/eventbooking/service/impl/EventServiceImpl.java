@@ -10,6 +10,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,7 +25,9 @@ import com.jonet.eventbooking.dto.request.event.PublicEventSearchRequest;
 import com.jonet.eventbooking.dto.response.event.EventDetailResponse;
 import com.jonet.eventbooking.dto.response.event.EventResponse;
 import com.jonet.eventbooking.entity.EventEntity;
+import com.jonet.eventbooking.entity.UserEntity;
 import com.jonet.eventbooking.repository.EventRepository;
+import com.jonet.eventbooking.repository.UserRepository;
 import com.jonet.eventbooking.repository.specification.EventSpecifications;
 import com.jonet.eventbooking.service.EventService;
 import com.jonet.eventbooking.service.ImageService;
@@ -42,6 +46,7 @@ public class EventServiceImpl implements EventService {
 	private final EventMapper eventMapper;
 	private final TicketTypeService ticketTypeService;
 	private final ImageService imageService;
+	private final UserRepository userRepository;
 
 	@Override
 	public Page<EventResponse> getEvents(EventSearchRequest eventRequest, Pageable pageable) {
@@ -61,6 +66,11 @@ public class EventServiceImpl implements EventService {
 
 	@Override
 	public void create(EventRequest eventRequest, MultipartFile file) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		UUID userId = UUID.fromString(authentication.getName());
+		UserEntity user = userRepository.findById(userId)
+				.orElseThrow(() -> new EntityNotFoundException("User not found"));
+
 		EventEntity event = eventMapper.toEventEntity(eventRequest);
 		event.getTicketTypes().forEach(ticketType -> {
 			ticketType.setEvent(event);
@@ -69,6 +79,7 @@ public class EventServiceImpl implements EventService {
 		UploadResult uploadResult = imageService.uploadImage(file, "events/seatmaps");
 		event.setImageUrl(uploadResult.getUrl());
 		event.setPublicId(uploadResult.getPublicId());
+		event.setUser(user);
 		eventRepository.save(event);
 	}
 
@@ -133,5 +144,16 @@ public class EventServiceImpl implements EventService {
 						eventOrder.get(second.getId())))
 				.map(eventMapper::toEventResponse)
 				.toList();
+	}
+
+	@Override
+	public List<EventResponse> getEventsByUserId(UUID userId, String name) {
+		List<EventEntity> events = eventRepository.findByUserId(userId);
+		if(name != null && !name.isBlank()) {
+			events = events.stream()
+					.filter(event -> event.getName().toLowerCase().contains(name.toLowerCase()))
+					.toList();
+		}
+		return events.stream().map(eventMapper::toEventResponse).toList();
 	}
 }

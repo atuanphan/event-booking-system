@@ -7,9 +7,13 @@ import java.util.UUID;
 
 import org.hibernate.annotations.UuidGenerator;
 
+import com.jonet.eventbooking.enums.OrderStatus;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -40,7 +44,8 @@ public class OrderEntity {
 	private BigDecimal totalAmount;
 	
 	@Column(name = "status", nullable = false)
-	private String status;
+	@Enumerated (EnumType.STRING)
+	private OrderStatus status;
 	
 	@Column(name = "expires_at", nullable = false)
 	private LocalDateTime expiresAt;

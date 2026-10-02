@@ -64,4 +64,5 @@ public interface EventRepository extends JpaRepository<EventEntity, UUID>, JpaSp
 
 	Page<EventEntity> findByStartTimeAfter(LocalDateTime startTime, Pageable pageable);
 
+	List<EventEntity> findByUserId(UUID userId);
 }

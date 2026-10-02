@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
 
-public record RefreshTokenPayload(UUID id, String email, List<String> roles) implements Serializable{
+import com.jonet.eventbooking.enums.RoleCode;
+
+public record RefreshTokenPayload(UUID id, String email, List<RoleCode> roles) implements Serializable{
 
 }

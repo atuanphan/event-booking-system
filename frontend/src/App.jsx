@@ -23,9 +23,16 @@ import VenueFormPage from './pages/admin/VenueFormPage';
 import UserListPage from './pages/admin/UserListPage';
 import StaffManagementPage from './pages/admin/StaffManagementPage';
 import OAuthCallbackPage from './pages/customer/OAuthCallbackPage';
+import OrganizerLayout from './pages/organizer/OrganizerLayout';
+import OrganizerDashboardPage from './pages/organizer/OrganizerDashboardPage';
+import OrganizerEventListPage from './pages/organizer/OrganizerEventListPage';
+import OrganizerEventFormPage from './pages/organizer/OrganizerEventFormPage';
+import OrganizerEventDetailPage from './pages/organizer/OrganizerEventDetailPage';
+import OrganizerOrdersPage from './pages/organizer/OrganizerOrdersPage';
+import OrganizerStatisticsPage from './pages/organizer/OrganizerStatisticsPage';
 
-function ProtectedRoute({ children, requireAdmin = false }) {
-  const { user, isAdmin, authReady } = useAuth();
+function ProtectedRoute({ children, allowedRoles = [] }) {
+  const { user, isAdmin, isOrganizer, authReady } = useAuth();
   const location = useLocation();
 
   // Đang thử khôi phục phiên (silent refresh) lúc app khởi động / F5.
@@ -38,8 +45,8 @@ function ProtectedRoute({ children, requireAdmin = false }) {
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
-  if (requireAdmin && !isAdmin) {
-    return <Navigate to="/" replace />;
+  if (allowedRoles.length > 0 && !user.roles?.some((role) => allowedRoles.includes(role))) {
+    return <Navigate to={isOrganizer ? '/organizer' : isAdmin ? '/admin' : '/'} replace />;
   }
 
   return children;
@@ -68,7 +75,7 @@ export default function App() {
 
       {/* Admin routes */}
       <Route path="/admin" element={
-        <ProtectedRoute requireAdmin><AdminLayout /></ProtectedRoute>
+        <ProtectedRoute allowedRoles={['ADMIN', 'STAFF']}><AdminLayout /></ProtectedRoute>
       }>
         <Route index element={<DashboardPage />} />
         <Route path="events" element={<EventListPage />} />
@@ -79,6 +86,19 @@ export default function App() {
         <Route path="venues/edit/:id" element={<VenueFormPage />} />
         <Route path="users" element={<UserListPage />} />
         <Route path="staff" element={<StaffManagementPage />} />
+      </Route>
+
+      {/* Organizer routes */}
+      <Route path="/organizer" element={
+        <ProtectedRoute allowedRoles={['ORGANIZER']}><OrganizerLayout /></ProtectedRoute>
+      }>
+        <Route index element={<OrganizerDashboardPage />} />
+        <Route path="events" element={<OrganizerEventListPage />} />
+        <Route path="events/create" element={<OrganizerEventFormPage />} />
+        <Route path="events/:id/edit" element={<OrganizerEventFormPage />} />
+        <Route path="events/:id" element={<OrganizerEventDetailPage />} />
+        <Route path="orders" element={<OrganizerOrdersPage />} />
+        <Route path="statistics" element={<OrganizerStatisticsPage />} />
       </Route>
     </Routes>
   );

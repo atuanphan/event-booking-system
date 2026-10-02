@@ -10,15 +10,11 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [events, venues, users] = await Promise.all([
-          api.post('/admin/events', { page: 1, pageSize: 1 }),
-          api.post('/admin/venues', { page: 1, pageSize: 1 }),
-          api.get('/admin/users'),
-        ]);
+        const { data } = await api.get('/admin/dashboard');
         setStats({
-          events: events.data.totalPage * 10 || events.data.list?.length || 0,
-          venues: venues.data.totalPage * 10 || venues.data.list?.length || 0,
-          users: users.data?.length || 0,
+          events: data.totalEvents,
+          venues: data.totalVenues,
+          users: data.totalUsers,
         });
       } catch {
         // ignore

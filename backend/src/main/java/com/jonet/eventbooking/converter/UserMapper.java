@@ -11,6 +11,7 @@ import com.jonet.eventbooking.dto.response.user.UserResponse;
 import com.jonet.eventbooking.entity.RoleEntity;
 import com.jonet.eventbooking.entity.UserEntity;
 import com.jonet.eventbooking.enums.AuthProvider;
+import com.jonet.eventbooking.enums.RoleCode;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
@@ -24,7 +25,7 @@ public interface UserMapper {
 	UserResponse toUserResponse(UserEntity userEntity);
 
 	@Named("mapRoles")
-	default List<String> mapRoles(List<RoleEntity> roles) {
+	default List<RoleCode> mapRoles(List<RoleEntity> roles) {
 		if (roles == null) {
 			return List.of();
 		}

@@ -4,7 +4,7 @@ import { Ticket, User, LogOut, Menu, X, ReceiptText } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 export default function Layout() {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, isOrganizer } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -50,6 +50,11 @@ export default function Layout() {
                   {isAdmin && (
                     <Link to="/admin" className="text-gray-600 hover:text-indigo-600 transition">
                       Quản trị
+                    </Link>
+                  )}
+                  {isOrganizer && (
+                    <Link to="/organizer" className="text-gray-600 hover:text-indigo-600 transition">
+                      Kênh Organizer
                     </Link>
                   )}
                   <div className="flex items-center gap-2 text-sm text-gray-700">

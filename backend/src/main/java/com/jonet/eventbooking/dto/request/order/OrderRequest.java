@@ -13,6 +13,6 @@ import lombok.Setter;
 public class OrderRequest {
 	private UUID id;
 	private UUID userId;
-	private String status = OrderStatus.PENDING.name();
+	private OrderStatus status = OrderStatus.PENDING;
 	private List<OrderItemsRequest> orderItems;
 }

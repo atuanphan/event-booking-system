@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,7 @@ import com.jonet.eventbooking.entity.OrderItemsEntity;
 import com.jonet.eventbooking.entity.TicketTypeEntity;
 import com.jonet.eventbooking.entity.UserEntity;
 import com.jonet.eventbooking.enums.OrderStatus;
+import com.jonet.eventbooking.model.TicketQuantityChangedEvent;
 import com.jonet.eventbooking.repository.OrderItemRepository;
 import com.jonet.eventbooking.repository.OrderRepository;
 import com.jonet.eventbooking.repository.TicketTypeRepository;
@@ -45,6 +47,7 @@ public class OrderServiceImpl implements OrderService {
 	private final OrderItemRepository orderItemRepository;
 	private final String redisKey = "ticket:stock:";
 	private final OrderMapper orderMapper;
+	private final ApplicationEventPublisher eventPublisher;
 
 	@Override
 	public UUID createOrder(OrderRequest orderRequest) {
@@ -56,7 +59,8 @@ public class OrderServiceImpl implements OrderService {
 		List<OrderItemsEntity> orderItemsEntities = orderRequest.getOrderItems().stream().map(req -> {
 			TicketTypeEntity ticket = ticketTypeRepository.findById(req.getTicketTypeId())
 					.orElseThrow(() -> new EntityNotFoundException("Ticket not found"));
-			ticketTypeService.updateAvailableQuantity(ticket.getId(), req.getQuantity());
+			int remainingQuantity = ticketTypeService.updateAvailableQuantity(ticket.getId(), req.getQuantity());
+			eventPublisher.publishEvent(new TicketQuantityChangedEvent(ticket.getId(), remainingQuantity));
 
 			return OrderItemsEntity.builder()
 			        .order(orderEntity)
@@ -69,7 +73,7 @@ public class OrderServiceImpl implements OrderService {
 		BigDecimal totalAmount = orderItemsEntities.stream()
 				.map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
 				.reduce(BigDecimal.ZERO, BigDecimal::add);
-
+				
 		orderEntity.setOrderItems(orderItemsEntities);
 		orderEntity.setTotalAmount(totalAmount);
 		orderRepository.save(orderEntity);
@@ -164,7 +168,7 @@ public class OrderServiceImpl implements OrderService {
  
         OrderEntity order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("Order Not Found!"));
-		return order.getStatus();
+		return order.getStatus().name();
 	}
 
 }

@@ -40,7 +40,7 @@ public class ExpiredOrderCleanupJob {
     @Scheduled(fixedDelay = 60000)
     public void cleanupExpiredOrders() {
         List<OrderEntity> expiredOrders = orderRepository
-                .findByStatusAndExpiresAtBefore(OrderStatus.PENDING.name(), LocalDateTime.now(), PageRequest.of(0, 200));
+                .findByStatusAndExpiresAtBefore(OrderStatus.PENDING, LocalDateTime.now(), PageRequest.of(0, 200));
 
         if (expiredOrders.isEmpty()) {
             return;
