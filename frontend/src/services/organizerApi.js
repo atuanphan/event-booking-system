@@ -130,13 +130,38 @@ export async function deleteTicketType(eventId, ticketId) {
   });
 }
 
-export async function getOrders(filters = {}) {
-  return clone(orders.filter((order) => (
-    (!filters.eventId || order.eventId === filters.eventId)
-    && (!filters.status || order.status === filters.status)
-    && (!filters.from || order.createdAt >= filters.from)
-    && (!filters.to || order.createdAt.slice(0, 10) <= filters.to)
-  )));
+export async function getOrders(filters = {}, page = 1, pageSize = 8) {
+  const { data } = await api.get('/organizer/orders', {
+    params: {
+      page,
+      pageSize,
+      eventId: filters.eventId || undefined,
+      status: filters.status || undefined,
+      startDate: filters.startDate || undefined,
+      endDate: filters.endDate || undefined,
+    },
+  });
+
+  const content = (data?.content || []).map((order) => {
+    const items = order.orderItems || [];
+    const eventNames = [...new Set(items.map((item) => item.event?.name).filter(Boolean))];
+    return {
+      id: order.id,
+      eventName: eventNames.join(', ') || 'Sự kiện không xác định',
+      customerName: order.user?.fullname || 'Khách hàng',
+      customerEmail: order.user?.email || '',
+      totalAmount: Number(order.totalAmount || 0),
+      status: order.status,
+      createdAt: order.createdAt,
+      ticketQuantity: items.reduce((sum, item) => sum + Number(item.quantity || 0), 0),
+    };
+  });
+
+  return {
+    content,
+    totalElements: Number(data?.totalElements || 0),
+    totalPages: Number(data?.totalPages || 0),
+  };
 }
 
 export async function getSalesStatistics() {

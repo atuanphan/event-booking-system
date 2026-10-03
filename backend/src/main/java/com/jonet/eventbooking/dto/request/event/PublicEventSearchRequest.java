@@ -7,6 +7,7 @@ import com.jonet.eventbooking.dto.AbstractDTO;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
@@ -14,6 +15,7 @@ import lombok.NoArgsConstructor;
 @Data 
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class PublicEventSearchRequest extends AbstractDTO{
     private UUID id;
 	private String name;

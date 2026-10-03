@@ -8,13 +8,19 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.jonet.eventbooking.converter.OrderMapper;
 import com.jonet.eventbooking.customexception.EntityNotFoundException;
 import com.jonet.eventbooking.dto.request.order.OrderRequest;
+import com.jonet.eventbooking.dto.request.order.OrderSearchRequest;
 import com.jonet.eventbooking.dto.request.payment.VNPayReturnRequest;
+import com.jonet.eventbooking.dto.response.order.OrderListResponse;
 import com.jonet.eventbooking.dto.response.order.OrderResponse;
 import com.jonet.eventbooking.dto.response.payment.VNPayIpnResponse;
 import com.jonet.eventbooking.entity.OrderEntity;
@@ -55,6 +61,7 @@ public class OrderServiceImpl implements OrderService {
 		        .user(new UserEntity(orderRequest.getUserId()))
 				.status(orderRequest.getStatus())
 				.expiresAt(LocalDateTime.now().plusMinutes(15))
+				.createdAt(LocalDateTime.now())
 				.build();
 		List<OrderItemsEntity> orderItemsEntities = orderRequest.getOrderItems().stream().map(req -> {
 			TicketTypeEntity ticket = ticketTypeRepository.findById(req.getTicketTypeId())
@@ -171,4 +178,12 @@ public class OrderServiceImpl implements OrderService {
 		return order.getStatus().name();
 	}
 
+	@Override
+	public Page<OrderListResponse> getOrders(OrderSearchRequest orderSearchRequest, Pageable pageable) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		UUID userId = UUID.fromString(authentication.getName());
+		
+		Page<OrderEntity> orders = orderRepository.findByOrganizer(userId, orderSearchRequest, pageable);
+		return orders.map(orderMapper::toOrderListResponse);
+	}
 }

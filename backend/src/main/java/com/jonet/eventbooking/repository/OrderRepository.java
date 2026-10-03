@@ -20,7 +20,7 @@ import jakarta.persistence.LockModeType;
 import jakarta.transaction.Transactional;
 
 @Transactional
-public interface OrderRepository extends JpaRepository<OrderEntity, UUID>{
+public interface OrderRepository extends JpaRepository<OrderEntity, UUID>, OrderRepositoryCustom{
 	@Query(value = """
 			SELECT o.id AS id, o.totalAmount AS totalAmount FROM OrderEntity o WHERE o.user.Id = :user_id AND o.status = 'PENDING'
 			""")
