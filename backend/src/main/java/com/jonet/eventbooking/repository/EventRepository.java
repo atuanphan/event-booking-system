@@ -65,4 +65,21 @@ public interface EventRepository extends JpaRepository<EventEntity, UUID>, JpaSp
 	Page<EventEntity> findByStartTimeAfter(LocalDateTime startTime, Pageable pageable);
 
 	List<EventEntity> findByUserId(UUID userId);
+
+    @Query("""
+        SELECT COUNT(e) FROM EventEntity e
+        WHERE e.user.id = :organizerId
+          AND e.startTime <= :now
+          AND e.endTime   >= :now
+        """)
+    long countOngoingByOrganizer(@Param("organizerId") UUID organizerId,
+                                @Param("now") LocalDateTime now);
+
+    @Query("""
+        SELECT COUNT(e) FROM EventEntity e
+        WHERE e.user.id = :organizerId
+          AND e.startTime > :now
+        """)
+    long countUpcomingByOrganizer(@Param("organizerId") UUID organizerId,
+                                  @Param("now") LocalDateTime now);
 }

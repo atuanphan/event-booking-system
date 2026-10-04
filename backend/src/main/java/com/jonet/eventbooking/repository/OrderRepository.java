@@ -1,5 +1,6 @@
 package com.jonet.eventbooking.repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -44,4 +45,26 @@ public interface OrderRepository extends JpaRepository<OrderEntity, UUID>, Order
     Optional<OrderEntity> findByIdForUpdate(@Param("id") UUID id);
 
 	List<OrderEntity> findByStatusAndExpiresAtBefore(OrderStatus status, LocalDateTime expiresAt, Pageable pageable);
+    
+	@Query("""
+        SELECT COALESCE(SUM(oi.quantity), 0)
+        FROM OrderItemsEntity oi
+        WHERE oi.ticketType.event.user.id = :organizerId
+          AND oi.order.status = :status
+        """)
+    long totalTicketsSold(@Param("organizerId") UUID organizerId,
+                      @Param("status") OrderStatus status);
+
+	@Query("""
+        SELECT COALESCE(SUM(o.totalAmount), 0)
+        FROM OrderEntity o
+        WHERE o.status = :status
+          AND EXISTS (
+              SELECT 1 FROM OrderItemsEntity oi
+              WHERE oi.order = o
+                AND oi.ticketType.event.user.id = :organizerId
+          )
+        """)
+    BigDecimal totalRevenue(@Param("organizerId") UUID organizerId,
+                        @Param("status") OrderStatus status);
 }

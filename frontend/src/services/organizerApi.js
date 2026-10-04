@@ -185,21 +185,31 @@ export async function getSalesStatistics() {
 }
 
 export async function getDashboard() {
-  const activeEvents = events.filter((event) => ['UPCOMING', 'ONGOING'].includes(event.status));
-  const soldQuantity = events.reduce((sum, event) => sum + event.ticketTypes.reduce(
-    (ticketSum, ticket) => ticketSum + ticket.totalQuantity - ticket.availableQuantity, 0
-  ), 0);
-  const stats = await getSalesStatistics();
+  const [{ data }, venueItems] = await Promise.all([
+    api.get('/organizer/dashboard'),
+    getVenues(),
+  ]);
+  const venuesById = new Map(venueItems.map((venue) => [venue.id, venue]));
+  const ticketsByMonth = new Map((data.ticketsByMonth || []).map((item) => [item.month, item.sold]));
+
   return {
-    eventCount: activeEvents.length,
-    soldQuantity,
-    revenue: stats.revenue,
-    upcomingCount: events.filter((event) => event.status === 'UPCOMING' && new Date(event.startTime) > new Date()).length,
-    timeline: [
-      { label: 'T.04', soldQuantity: 380 }, { label: 'T.05', soldQuantity: 540 },
-      { label: 'T.06', soldQuantity: 470 }, { label: 'T.07', soldQuantity: 690 },
-      { label: 'T.08', soldQuantity: 920 }, { label: 'T.09', soldQuantity: 810 },
-    ],
-    recentEvents: clone(events).sort((a, b) => new Date(a.startTime) - new Date(b.startTime)).slice(0, 4),
+    eventCount: data.totalEvents,
+    soldQuantity: data.totalTicketsSold,
+    revenue: data.totalRevenue,
+    upcomingCount: data.upcomingEvents,
+    timeline: Array.from({ length: 12 }, (_, index) => {
+      const month = index + 1;
+      return {
+        label: `T.${String(month).padStart(2, '0')}`,
+        soldQuantity: Number(ticketsByMonth.get(month) || 0),
+      };
+    }),
+    recentEvents: [...(data.eventResponse || [])]
+      .sort((first, second) => new Date(first.startTime) - new Date(second.startTime))
+      .slice(0, 4)
+      .map((event) => ({
+        ...event,
+        venue: venuesById.get(event.venueId),
+      })),
   };
 }

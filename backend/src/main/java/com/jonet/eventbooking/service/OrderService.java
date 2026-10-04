@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import com.jonet.eventbooking.dto.MonthlyTicketDTO;
 import com.jonet.eventbooking.dto.request.order.OrderRequest;
 import com.jonet.eventbooking.dto.request.order.OrderSearchRequest;
 import com.jonet.eventbooking.dto.request.payment.VNPayReturnRequest;
@@ -22,4 +23,5 @@ public interface OrderService {
 
 	public Page<OrderListResponse> getOrders(OrderSearchRequest orderSearchRequest, Pageable pageable);
 	
+	public List<MonthlyTicketDTO> getMonthlyTickets(UUID organizerId, int year);
 }
