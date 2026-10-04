@@ -130,51 +130,85 @@ export async function deleteTicketType(eventId, ticketId) {
   });
 }
 
-export async function getOrders(filters = {}) {
-  return clone(orders.filter((order) => (
-    (!filters.eventId || order.eventId === filters.eventId)
-    && (!filters.status || order.status === filters.status)
-    && (!filters.from || order.createdAt >= filters.from)
-    && (!filters.to || order.createdAt.slice(0, 10) <= filters.to)
-  )));
+export async function getOrders(filters = {}, page = 1, pageSize = 8) {
+  const { data } = await api.get('/organizer/orders', {
+    params: {
+      page,
+      pageSize,
+      eventId: filters.eventId || undefined,
+      status: filters.status || undefined,
+      startDate: filters.startDate || undefined,
+      endDate: filters.endDate || undefined,
+    },
+  });
+
+  const content = (data?.content || []).map((order) => {
+    const items = order.orderItems || [];
+    const eventNames = [...new Set(items.map((item) => item.event?.name).filter(Boolean))];
+    return {
+      id: order.id,
+      eventName: eventNames.join(', ') || 'Sự kiện không xác định',
+      customerName: order.user?.fullname || 'Khách hàng',
+      customerEmail: order.user?.email || '',
+      totalAmount: Number(order.totalAmount || 0),
+      status: order.status,
+      createdAt: order.createdAt,
+      ticketQuantity: items.reduce((sum, item) => sum + Number(item.quantity || 0), 0),
+    };
+  });
+
+  return {
+    content,
+    totalElements: Number(data?.totalElements || 0),
+    totalPages: Number(data?.totalPages || 0),
+  };
 }
 
 export async function getSalesStatistics() {
-  const completed = orders.filter((order) => order.status === 'COMPLETED');
-  const topEvents = events.map((event) => ({
-    eventId: event.id,
-    eventName: event.name,
-    soldQuantity: event.ticketTypes.reduce((sum, ticket) => sum + ticket.totalQuantity - ticket.availableQuantity, 0),
-  })).sort((a, b) => b.soldQuantity - a.soldQuantity);
-
+  const { data } = await api.get('/organizer/statistics');
   return {
-    revenue: completed.reduce((sum, order) => sum + order.totalAmount, 0),
-    soldQuantity: completed.reduce((sum, order) => sum + order.ticketQuantity, 0),
-    topEvents,
-    timeline: [
-      { label: 'T.04', revenue: 4200000 }, { label: 'T.05', revenue: 6100000 },
-      { label: 'T.06', revenue: 5300000 }, { label: 'T.07', revenue: 8700000 },
-      { label: 'T.08', revenue: 12400000 }, { label: 'T.09', revenue: 9800000 },
-    ],
+    revenue: Number(data?.totalRevenue || 0),
+    soldQuantity: Number(data?.totalTicketsSold || 0),
+    eventsWithTicketSales: Number(data?.eventsWithTicketSales || 0),
+    timeline: (data?.monthlyRevenue || []).map((item) => ({
+      label: `T.${String(item.month).padStart(2, '0')}`,
+      revenue: Number(item.revenue || 0),
+    })),
+    topEvents: (data?.bestSellingEvent || []).map((event) => ({
+      eventId: event.eventName,
+      eventName: event.eventName,
+      soldQuantity: Number(event.ticketsSold || 0),
+      ticketSalesPercentage: Number(event.ticketSalesPercentage || 0),
+    })),
   };
 }
 
 export async function getDashboard() {
-  const activeEvents = events.filter((event) => ['UPCOMING', 'ONGOING'].includes(event.status));
-  const soldQuantity = events.reduce((sum, event) => sum + event.ticketTypes.reduce(
-    (ticketSum, ticket) => ticketSum + ticket.totalQuantity - ticket.availableQuantity, 0
-  ), 0);
-  const stats = await getSalesStatistics();
+  const [{ data }, venueItems] = await Promise.all([
+    api.get('/organizer/dashboard'),
+    getVenues(),
+  ]);
+  const venuesById = new Map(venueItems.map((venue) => [venue.id, venue]));
+  const ticketsByMonth = new Map((data.ticketsByMonth || []).map((item) => [item.month, item.sold]));
+
   return {
-    eventCount: activeEvents.length,
-    soldQuantity,
-    revenue: stats.revenue,
-    upcomingCount: events.filter((event) => event.status === 'UPCOMING' && new Date(event.startTime) > new Date()).length,
-    timeline: [
-      { label: 'T.04', soldQuantity: 380 }, { label: 'T.05', soldQuantity: 540 },
-      { label: 'T.06', soldQuantity: 470 }, { label: 'T.07', soldQuantity: 690 },
-      { label: 'T.08', soldQuantity: 920 }, { label: 'T.09', soldQuantity: 810 },
-    ],
-    recentEvents: clone(events).sort((a, b) => new Date(a.startTime) - new Date(b.startTime)).slice(0, 4),
+    eventCount: data.totalEvents,
+    soldQuantity: data.totalTicketsSold,
+    revenue: data.totalRevenue,
+    upcomingCount: data.upcomingEvents,
+    timeline: Array.from({ length: 12 }, (_, index) => {
+      const month = index + 1;
+      return {
+        label: `T.${String(month).padStart(2, '0')}`,
+        soldQuantity: Number(ticketsByMonth.get(month) || 0),
+      };
+    }),
+    recentEvents: [...(data.eventResponse || [])]
+      .sort((first, second) => new Date(first.startTime) - new Date(second.startTime))
+      .slice(0, 4)
+      .map((event) => ({
+        ...event,
+        venue: venuesById.get(event.venueId),
+      })),
   };
 }

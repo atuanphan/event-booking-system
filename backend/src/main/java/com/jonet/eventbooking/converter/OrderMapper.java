@@ -7,6 +7,7 @@ import org.mapstruct.Mapping;
 
 import com.jonet.eventbooking.dto.request.order.OrderItemsRequest;
 import com.jonet.eventbooking.dto.request.order.OrderRequest;
+import com.jonet.eventbooking.dto.response.order.OrderListResponse;
 import com.jonet.eventbooking.dto.response.order.OrderResponse;
 import com.jonet.eventbooking.entity.OrderEntity;
 import com.jonet.eventbooking.entity.OrderItemsEntity;
@@ -14,7 +15,8 @@ import com.jonet.eventbooking.entity.OrderItemsEntity;
 @Mapper(componentModel = "spring",
 	uses = {
 		OrderItemsMapper.class,
-		PromotionMapper.class
+		PromotionMapper.class,
+		UserMapper.class
 	}
 )
 public interface OrderMapper {
@@ -30,4 +32,5 @@ public interface OrderMapper {
 
 	List<OrderResponse> toResponseList(List<OrderEntity> entities);
 
+	OrderListResponse toOrderListResponse(OrderEntity orderEntity);
 }

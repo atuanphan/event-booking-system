@@ -2,19 +2,29 @@ package com.jonet.eventbooking.service.impl;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.jonet.eventbooking.converter.OrderMapper;
 import com.jonet.eventbooking.customexception.EntityNotFoundException;
+import com.jonet.eventbooking.dto.MonthlyTicketDTO;
 import com.jonet.eventbooking.dto.request.order.OrderRequest;
+import com.jonet.eventbooking.dto.request.order.OrderSearchRequest;
 import com.jonet.eventbooking.dto.request.payment.VNPayReturnRequest;
+import com.jonet.eventbooking.dto.response.order.OrderListResponse;
 import com.jonet.eventbooking.dto.response.order.OrderResponse;
 import com.jonet.eventbooking.dto.response.payment.VNPayIpnResponse;
 import com.jonet.eventbooking.entity.OrderEntity;
@@ -26,6 +36,7 @@ import com.jonet.eventbooking.model.TicketQuantityChangedEvent;
 import com.jonet.eventbooking.repository.OrderItemRepository;
 import com.jonet.eventbooking.repository.OrderRepository;
 import com.jonet.eventbooking.repository.TicketTypeRepository;
+import com.jonet.eventbooking.repository.projections.MonthlyTicketProjection;
 import com.jonet.eventbooking.service.OrderService;
 import com.jonet.eventbooking.service.PaymentService;
 import com.jonet.eventbooking.service.TicketTypeService;
@@ -48,6 +59,7 @@ public class OrderServiceImpl implements OrderService {
 	private final String redisKey = "ticket:stock:";
 	private final OrderMapper orderMapper;
 	private final ApplicationEventPublisher eventPublisher;
+	private final OrderItemRepository orderItemsRepository;
 
 	@Override
 	public UUID createOrder(OrderRequest orderRequest) {
@@ -55,6 +67,7 @@ public class OrderServiceImpl implements OrderService {
 		        .user(new UserEntity(orderRequest.getUserId()))
 				.status(orderRequest.getStatus())
 				.expiresAt(LocalDateTime.now().plusMinutes(15))
+				.createdAt(LocalDateTime.now())
 				.build();
 		List<OrderItemsEntity> orderItemsEntities = orderRequest.getOrderItems().stream().map(req -> {
 			TicketTypeEntity ticket = ticketTypeRepository.findById(req.getTicketTypeId())
@@ -171,4 +184,30 @@ public class OrderServiceImpl implements OrderService {
 		return order.getStatus().name();
 	}
 
+	@Override
+	public Page<OrderListResponse> getOrders(OrderSearchRequest orderSearchRequest, Pageable pageable) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		UUID userId = UUID.fromString(authentication.getName());
+		
+		Page<OrderEntity> orders = orderRepository.findByOrganizer(userId, orderSearchRequest, pageable);
+		return orders.map(orderMapper::toOrderListResponse);
+	}
+
+	@Override
+	public List<MonthlyTicketDTO> getMonthlyTickets(UUID organizerId, int year) {
+		LocalDateTime from = LocalDate.of(year, 1, 1).atStartOfDay();
+		LocalDateTime to = from.plusYears(1);
+
+		Map<Integer, Long> data = orderItemsRepository
+				.ticketsSoldByMonth(organizerId, OrderStatus.COMPLETED, from, to)
+				.stream()
+				.collect(Collectors.toMap(MonthlyTicketProjection::getMonth,
+						MonthlyTicketProjection::getSold));
+
+		return IntStream.rangeClosed(1, 12)
+				.mapToObj(m -> new MonthlyTicketDTO(m, data.getOrDefault(m, 0L)))
+				.toList();
+	}
+
+	
 }
