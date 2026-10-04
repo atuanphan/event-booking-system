@@ -15,6 +15,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.jonet.eventbooking.entity.OrderEntity;
 import com.jonet.eventbooking.enums.OrderStatus;
+import com.jonet.eventbooking.repository.projections.MonthlyRevenueProjection;
 import com.jonet.eventbooking.repository.projections.OrderMinInfo;
 
 import jakarta.persistence.LockModeType;
@@ -67,4 +68,24 @@ public interface OrderRepository extends JpaRepository<OrderEntity, UUID>, Order
         """)
     BigDecimal totalRevenue(@Param("organizerId") UUID organizerId,
                         @Param("status") OrderStatus status);
+
+  @Query("""
+    SELECT MONTH(o.createdAt) AS month,
+           COALESCE(SUM(o.totalAmount), 0) AS revenue
+    FROM OrderEntity o
+    WHERE o.status = :status
+      AND o.createdAt >= :from
+      AND o.createdAt <  :to
+      AND EXISTS (
+          SELECT 1 FROM OrderItemsEntity oi
+          WHERE oi.order = o
+            AND oi.ticketType.event.user.id = :organizerId
+      )
+    GROUP BY MONTH(o.createdAt)
+    ORDER BY MONTH(o.createdAt)
+    """)
+  List<MonthlyRevenueProjection> revenueByMonth(@Param("organizerId") UUID organizerId,
+                                              @Param("status") OrderStatus status,
+                                              @Param("from") LocalDateTime from,
+                                              @Param("to") LocalDateTime to);
 }

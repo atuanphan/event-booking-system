@@ -165,22 +165,21 @@ export async function getOrders(filters = {}, page = 1, pageSize = 8) {
 }
 
 export async function getSalesStatistics() {
-  const completed = orders.filter((order) => order.status === 'COMPLETED');
-  const topEvents = events.map((event) => ({
-    eventId: event.id,
-    eventName: event.name,
-    soldQuantity: event.ticketTypes.reduce((sum, ticket) => sum + ticket.totalQuantity - ticket.availableQuantity, 0),
-  })).sort((a, b) => b.soldQuantity - a.soldQuantity);
-
+  const { data } = await api.get('/organizer/statistics');
   return {
-    revenue: completed.reduce((sum, order) => sum + order.totalAmount, 0),
-    soldQuantity: completed.reduce((sum, order) => sum + order.ticketQuantity, 0),
-    topEvents,
-    timeline: [
-      { label: 'T.04', revenue: 4200000 }, { label: 'T.05', revenue: 6100000 },
-      { label: 'T.06', revenue: 5300000 }, { label: 'T.07', revenue: 8700000 },
-      { label: 'T.08', revenue: 12400000 }, { label: 'T.09', revenue: 9800000 },
-    ],
+    revenue: Number(data?.totalRevenue || 0),
+    soldQuantity: Number(data?.totalTicketsSold || 0),
+    eventsWithTicketSales: Number(data?.eventsWithTicketSales || 0),
+    timeline: (data?.monthlyRevenue || []).map((item) => ({
+      label: `T.${String(item.month).padStart(2, '0')}`,
+      revenue: Number(item.revenue || 0),
+    })),
+    topEvents: (data?.bestSellingEvent || []).map((event) => ({
+      eventId: event.eventName,
+      eventName: event.eventName,
+      soldQuantity: Number(event.ticketsSold || 0),
+      ticketSalesPercentage: Number(event.ticketSalesPercentage || 0),
+    })),
   };
 }
 
