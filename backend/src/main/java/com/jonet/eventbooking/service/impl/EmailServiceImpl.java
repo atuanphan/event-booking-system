@@ -27,4 +27,14 @@ public class EmailServiceImpl implements EmailService{
 		javaMailSender.send(message);
 	}
 
+	@Override
+	public void sendEmailResetPassword(String toEmail, String password) {
+		SimpleMailMessage message = new SimpleMailMessage();
+		message.setFrom(emailAddress);
+		message.setTo(toEmail);
+		message.setText("Mật khẩu của bạn đã được reset.Mật khẩu mới là:" + password);
+		message.setSubject(emailAddress);
+		javaMailSender.send(message);
+	}
+
 }

@@ -3,14 +3,21 @@ package com.jonet.eventbooking.service;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import com.jonet.eventbooking.dto.request.user.UserRequest;
 import com.jonet.eventbooking.dto.response.user.UserResponse;
 import com.jonet.eventbooking.entity.UserEntity;
 import com.jonet.eventbooking.enums.AuthProvider;
+import com.jonet.eventbooking.enums.RoleCode;
 
 public interface UserService {
 	public List<UserResponse> getCustomers();
 	public void changePassword(UserRequest userRequest);
 	public void delete(UUID id, String email);
 	public UserEntity findOrCreateByEmail(String email,  String fullname, AuthProvider provider, String providerId);
+	public Page<UserResponse> getStaff(String email, Pageable pageable);
+	public void resetPassword(UUID userId);
+	public void updateStaffRole(UUID userId, RoleCode role);
 }
