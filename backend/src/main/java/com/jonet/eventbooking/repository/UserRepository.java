@@ -12,6 +12,8 @@ import com.jonet.eventbooking.entity.UserEntity;
 
 import io.lettuce.core.dynamic.annotation.Param;
 import jakarta.transaction.Transactional;
+import com.jonet.eventbooking.entity.RoleEntity;
+
 
 @Transactional
 public interface UserRepository extends JpaRepository<UserEntity, UUID>, UserRepositoryCustom{
@@ -30,4 +32,6 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID>, UserRep
 			    WHERE u.email = :email
 			""")
 	Optional<UserEntity> findByEmailWithRoles(String email);
+
+	List<UserEntity> findByRoles(List<RoleEntity> roles);
 }

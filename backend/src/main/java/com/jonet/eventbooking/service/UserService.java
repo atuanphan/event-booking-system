@@ -9,7 +9,7 @@ import com.jonet.eventbooking.entity.UserEntity;
 import com.jonet.eventbooking.enums.AuthProvider;
 
 public interface UserService {
-	public List<UserResponse> getUsers();
+	public List<UserResponse> getCustomers();
 	public void changePassword(UserRequest userRequest);
 	public void delete(UUID id, String email);
 	public UserEntity findOrCreateByEmail(String email,  String fullname, AuthProvider provider, String providerId);
