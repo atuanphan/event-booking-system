@@ -153,7 +153,7 @@ public class AuthServiceImpl implements AuthService {
                 .email(userRequest.getEmail())
                 .fullname(userRequest.getFullname())
                 .password(passwordEncoder.encode(userRequest.getPassword()))
-                .roles(List.of(roleService.getRoleByCode(RoleCode.CUSTOMER.toString())))
+                .roles(List.of(roleService.getRoleByCode(RoleCode.CUSTOMER)))
                 .status(userRequest.getStatus())
                 .provider(AuthProvider.LOCAL)
                 .build();

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.jonet.eventbooking.customexception.EntityNotFoundException;
 import com.jonet.eventbooking.customexception.RequestTimeoutException;
 import com.jonet.eventbooking.entity.RoleEntity;
+import com.jonet.eventbooking.enums.RoleCode;
 import com.jonet.eventbooking.repository.RoleRepository;
 import com.jonet.eventbooking.service.RoleService;
 
@@ -23,27 +24,27 @@ public class RoleServiceImpl implements RoleService {
 	private final ReentrantLock reentrantLock = new ReentrantLock();
 
 	@Override
-	public RoleEntity getRoleByCode(String code) {
-		RoleEntity roleEntity = (RoleEntity) redisTemplate.opsForValue().get(redis_role_key.concat(code));
+	public RoleEntity getRoleByCode(RoleCode code) {
+		RoleEntity roleEntity = (RoleEntity) redisTemplate.opsForValue().get(redis_role_key.concat(code.name()));
 		if (roleEntity != null) {
 			return roleEntity;
 		}
 		try {
 			if (reentrantLock.tryLock(3, TimeUnit.SECONDS)) {
 				try {
-					roleEntity = (RoleEntity) redisTemplate.opsForValue().get(redis_role_key.concat(code));
+					roleEntity = (RoleEntity) redisTemplate.opsForValue().get(redis_role_key.concat(code.name()));
 					if (roleEntity != null) {
 						return roleEntity;
 					}
 					roleEntity = roleRepository.findByCode(code)
 							.orElseThrow(() -> new EntityNotFoundException("Role Not Found"));
-					redisTemplate.opsForValue().set(redis_role_key.concat(code), roleEntity);
+					redisTemplate.opsForValue().set(redis_role_key.concat(code.name()), roleEntity);
 					return roleEntity;
 				} finally {
 					reentrantLock.unlock();
 				}
 			} else {
-				roleEntity = (RoleEntity) redisTemplate.opsForValue().get(redis_role_key.concat(code));
+				roleEntity = (RoleEntity) redisTemplate.opsForValue().get(redis_role_key.concat(code.name()));
                 if (roleEntity != null) {
                     return roleEntity;
                 }

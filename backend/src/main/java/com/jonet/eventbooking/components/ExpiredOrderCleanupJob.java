@@ -66,7 +66,7 @@ public class ExpiredOrderCleanupJob {
  
         // Double-check lại status sau khi lock, phòng trường hợp IPN vừa
         // xử lý xong ngay trước khi job kịp lock được order này.
-        if (!OrderStatus.PENDING.name().equals(order.getStatus())) {
+        if (!OrderStatus.PENDING.equals(order.getStatus())) {
             log.info("Order {} đã được xử lý (status={}) trước khi job kịp hủy, bỏ qua",
                     orderId, order.getStatus());
             return;

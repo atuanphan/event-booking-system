@@ -23,7 +23,7 @@ public class UserController {
 
 	@GetMapping
 	public ResponseEntity<List<UserResponse>> getCustomers() {
-		return ResponseEntity.ok(userService.getUsers());
+		return ResponseEntity.ok(userService.getCustomers());
 	}
 
 	@DeleteMapping("/{id}/{email}")

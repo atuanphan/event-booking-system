@@ -14,6 +14,7 @@ import com.jonet.eventbooking.auth.oauth2.CustomOAuth2User;
 import com.jonet.eventbooking.entity.RoleEntity;
 import com.jonet.eventbooking.entity.UserEntity;
 import com.jonet.eventbooking.enums.AuthProvider;
+import com.jonet.eventbooking.enums.RoleCode;
 import com.jonet.eventbooking.repository.RoleRepository;
 import com.jonet.eventbooking.repository.UserRepository;
 
@@ -53,7 +54,7 @@ public class CustomOidcUserService extends OidcUserService {
     }
 
     private UserEntity registerNewUser(String provider, String providerId, String email, String name) {
-        RoleEntity role = roleRepository.findByCode("CUSTOMER")
+        RoleEntity role = roleRepository.findByCode(RoleCode.CUSTOMER)
                 .orElseThrow(() -> new IllegalStateException("Default role ROLE_USER not found in DB"));
         UserEntity newUser = UserEntity.builder()
                 .provider(AuthProvider.valueOf(provider.toUpperCase()))

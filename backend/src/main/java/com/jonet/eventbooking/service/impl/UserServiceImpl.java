@@ -15,6 +15,7 @@ import com.jonet.eventbooking.dto.response.user.UserResponse;
 import com.jonet.eventbooking.entity.RoleEntity;
 import com.jonet.eventbooking.entity.UserEntity;
 import com.jonet.eventbooking.enums.AuthProvider;
+import com.jonet.eventbooking.enums.RoleCode;
 import com.jonet.eventbooking.repository.RoleRepository;
 import com.jonet.eventbooking.repository.UserRepository;
 import com.jonet.eventbooking.service.UserService;
@@ -48,9 +49,9 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public List<UserResponse> getUsers() {
-		List<UserEntity> users = userRepository.findAll();
-		return users.stream().map(userMapper::toUserResponse).toList();
+	public List<UserResponse> getCustomers() {
+		List<UserEntity> customers = userRepository.findByRoles(List.of(getDefaultRole()));
+		return customers.stream().map(userMapper::toUserResponse).toList();
 	}
 
 	@Transactional
@@ -101,7 +102,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private RoleEntity getDefaultRole() {
-        return roleRepository.findByCode(DEFAULT_ROLE)
+        return roleRepository.findByCode(RoleCode.CUSTOMER)
                 .orElseThrow(() -> new IllegalStateException(
                     "Role mặc định '" + DEFAULT_ROLE + "' chưa tồn tại trong DB"));
     }

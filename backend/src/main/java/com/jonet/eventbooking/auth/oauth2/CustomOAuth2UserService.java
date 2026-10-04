@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import com.jonet.eventbooking.entity.RoleEntity;
 import com.jonet.eventbooking.entity.UserEntity;
 import com.jonet.eventbooking.enums.AuthProvider;
+import com.jonet.eventbooking.enums.RoleCode;
 import com.jonet.eventbooking.repository.RoleRepository;
 import com.jonet.eventbooking.repository.UserRepository;
 
@@ -55,7 +56,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     private UserEntity registerNewUser(String email, String name, String provider, String providerId) {
-        RoleEntity role = roleRepository.findByCode("CUSTOMER")
+        RoleEntity role = roleRepository.findByCode(RoleCode.CUSTOMER)
                 .orElseThrow(() -> new IllegalStateException("Default role ROLE_USER not found in DB"));
         return UserEntity.builder()
                     .email(email)

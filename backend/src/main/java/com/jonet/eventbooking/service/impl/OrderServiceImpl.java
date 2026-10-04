@@ -122,7 +122,7 @@ public class OrderServiceImpl implements OrderService {
             return VNPayIpnResponse.invalidSignature();
         }
 
-		if (!OrderStatus.PENDING.name().equals(order.getStatus())) {
+		if (!OrderStatus.PENDING.equals(order.getStatus())) {
             log.info("VNPay IPN: order {} đã ở trạng thái {}, bỏ qua xử lý lại",
                     orderId, order.getStatus());
             return VNPayIpnResponse.orderAlreadyConfirmed();
