@@ -13,6 +13,7 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -32,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @EnableWebSecurity
 @RequiredArgsConstructor
 @Slf4j 
+@EnableMethodSecurity
 public class SecurityConfig {
 	private final JwtService jwtService;
     private final UserDetailsService userDetailsService;

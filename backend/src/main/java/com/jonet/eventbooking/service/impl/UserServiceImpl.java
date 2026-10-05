@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
@@ -54,6 +55,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+    @PreAuthorize("hasRole('ADMIN')")
 	public void delete(UUID id, String email) {
 		userRepository.deleteAccount(id);
 		redisTemplate.opsForSet().remove(REDIS_SET_KEY, email);
@@ -132,6 +134,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     public void resetPassword(UUID userId) {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
@@ -145,6 +148,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     public void updateStaffRole(UUID userId, RoleCode role) {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));

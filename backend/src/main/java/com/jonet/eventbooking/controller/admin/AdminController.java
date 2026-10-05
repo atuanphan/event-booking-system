@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.jonet.eventbooking.enums.RoleCode;
 import com.jonet.eventbooking.service.UserService;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -24,7 +23,7 @@ public class AdminController {
 	private final UserService userService;
 	
 	@PutMapping("/users/{userId}/password/reset")
-	public ResponseEntity<String> resetPassword(@Valid @PathVariable UUID userId) {
+	public ResponseEntity<String> resetPassword(@PathVariable UUID userId) {
 		userService.resetPassword(userId);
 		return ResponseEntity.ok("Password update successfully!");
 	} 
