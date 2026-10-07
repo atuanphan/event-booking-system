@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -50,6 +51,7 @@ public class AuthServiceImpl implements AuthService {
 	private final RoleService roleService;
 	private final MailExecutor mailExecutor;
 	private final EmailService emailService;
+	private final RedisTemplate<Object, Object> redisTemplate;
 	
 	private static final String REDIS_SET_KEY = "emails:registed_set";
 
@@ -136,11 +138,11 @@ public class AuthServiceImpl implements AuthService {
 	@Override
 	public String exchangeOAuthCode(Map<String, String> body) {
 		String code = body.get("code");
-		Object userIdObject = stringRedisTemplate.opsForValue().get("oauth-code:" + code);
+		Object userIdObject = redisTemplate.opsForValue().get("oauth-code:" + code);
 		if (userIdObject == null) {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or expired code");
 		}
-		stringRedisTemplate.delete("oauth-code:" + code);
+		redisTemplate.delete("oauth-code:" + code);
 
 		UUID userId = UUID.fromString(userIdObject.toString());
 		UserEntity user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User not found"));
@@ -152,7 +154,7 @@ public class AuthServiceImpl implements AuthService {
 
 	@Override
 	public void registerAccount(UserRequest userRequest) {
-		boolean isEmail = stringRedisTemplate.opsForSet().isMember(REDIS_SET_KEY, userRequest.getEmail());
+		boolean isEmail = redisTemplate.opsForSet().isMember(REDIS_SET_KEY, userRequest.getEmail());
 		if(Boolean.TRUE.equals(isEmail)) {
 			throw new ResourceAlreadyExistsException("Email đã được đăng kí.Vui lòng đăng nhập");
 		}
@@ -167,7 +169,7 @@ public class AuthServiceImpl implements AuthService {
                 .build();
                 
 		userRepository.save(userEntity);
-		stringRedisTemplate.opsForSet().add(REDIS_SET_KEY, userEntity.getEmail());
+		redisTemplate.opsForSet().add(REDIS_SET_KEY, userEntity.getEmail());
 		mailExecutor.submitTask(() -> {
 			emailService.sendEmailRegisterSuccess(userRequest.getEmail());
 		});
