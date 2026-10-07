@@ -2,16 +2,22 @@ package com.jonet.eventbooking.auth;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.time.Duration;
+import java.util.Base64;
 import java.util.Date;
+import java.util.HexFormat;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
-import com.jonet.eventbooking.dto.RefreshTokenPayload;
 import com.jonet.eventbooking.model.MyUserDetails;
+import com.jonet.eventbooking.utils.RedisUtil;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -31,7 +37,7 @@ public class JwtService {
     @Value("${token.refresh.expiry}")
     private long refreshTokenExpiry;
 
-	private final RedisTemplate<Object, Object> redisTemplate;
+	private final StringRedisTemplate stringRedisTemplate;;
 
     public String generateAccessToken(MyUserDetails user) {
         return Jwts.builder()
@@ -44,21 +50,17 @@ public class JwtService {
             .compact();
     }
 
-    public ResponseCookie generateRefreshToken(MyUserDetails user) {
-        String token = Jwts.builder()
-            .setSubject(user.getId().toString())
-            .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExpiry))
-            .signWith(getSigningKey(), SignatureAlgorithm.HS256)
-            .compact();
-        RefreshTokenPayload payload = new RefreshTokenPayload(user.getId(), user.getEmail(), user.getRoles());
-		redisTemplate.opsForValue().set("refresh-token:" + token, payload, Duration.ofMillis(refreshTokenExpiry));
-        return ResponseCookie.from("refresh_token", token)
-        		.httpOnly(true)
-        		.secure(true)
-        		.sameSite("None")
-        		.path("/")
-        		.maxAge(Duration.ofMillis(refreshTokenExpiry))
-        		.build();
+    public ResponseCookie generateRefreshToken(UUID userId) {
+        String refreshToken = getRefreshToken();
+        stringRedisTemplate.opsForValue().set(RedisUtil.getRefreshTokenKey(sha256Hex(refreshToken)), userId.toString(),
+                Duration.ofMillis(refreshTokenExpiry));
+        return ResponseCookie.from("refresh_token", refreshToken)
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("None")
+                .path("/")
+                .maxAge(Duration.ofMillis(refreshTokenExpiry))
+                .build();
     }
 
     public Claims validateAndParse(String token) {
@@ -71,5 +73,21 @@ public class JwtService {
 
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static final String getRefreshToken() {
+		byte[] bytes = new byte[32];
+		new SecureRandom().nextBytes(bytes);
+		String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+		return token;
+	}
+
+    public static String sha256Hex(String s) {
+        try {
+            byte[] d = MessageDigest.getInstance("SHA-256").digest(s.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(d);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
     }
 }

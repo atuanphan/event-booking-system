@@ -14,7 +14,6 @@ import org.springframework.stereotype.Component;
 
 import com.jonet.eventbooking.auth.JwtService;
 import com.jonet.eventbooking.entity.UserEntity;
-import com.jonet.eventbooking.model.MyUserDetails;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,12 +40,11 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         UserEntity user = oAuth2User.getUserEntity();
 
-        MyUserDetails userDetails = MyUserDetails.build(user);
-        ResponseCookie refreshTokenCookie = jwtService.generateRefreshToken(userDetails);
+        ResponseCookie refreshTokenCookie = jwtService.generateRefreshToken(user.getId());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 
         String codeAuth = UUID.randomUUID().toString();
-        redisTemplate.opsForValue().set("oauth-code:" + codeAuth, userDetails.getId(), Duration.ofSeconds(30)); // 30 giây
+        redisTemplate.opsForValue().set("oauth-code:" + codeAuth, user.getId(), Duration.ofSeconds(30)); // 30 giây
         String redirect = redirectUrl + "/oauth-callback?code=" + codeAuth;
         
         response.sendRedirect(redirect);
