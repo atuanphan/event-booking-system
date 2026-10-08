@@ -152,11 +152,11 @@ public class AuthServiceImpl implements AuthService {
 	@Override
 	public String exchangeOAuthCode(Map<String, String> body) {
 		String code = body.get("code");
-		Object userIdObject = redisTemplate.opsForValue().get("oauth-code:" + code);
+		Object userIdObject = redisTemplate.opsForValue().get(RedisUtil.getOAuthCodeKey(code));
 		if (userIdObject == null) {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or expired code");
 		}
-		redisTemplate.delete("oauth-code:" + code);
+		redisTemplate.delete(RedisUtil.getOAuthCodeKey(code));
 
 		UUID userId = UUID.fromString(userIdObject.toString());
 		UserEntity user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User not found"));
