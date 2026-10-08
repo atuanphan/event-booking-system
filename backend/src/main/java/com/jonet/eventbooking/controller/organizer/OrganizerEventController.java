@@ -17,6 +17,7 @@ import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -37,6 +38,7 @@ import com.jonet.eventbooking.service.VenueService;
 @RestController 
 @RequestMapping("/v1/organizer/events")
 @RequiredArgsConstructor 
+@PreAuthorize("hasAnyRole('ORGANIZER', 'ADMIN')")
 public class OrganizerEventController {
     private final EventService eventService;
 	private final VenueService venueService;

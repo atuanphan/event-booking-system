@@ -1,10 +1,12 @@
 package com.jonet.eventbooking.service.impl;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -12,6 +14,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.jonet.eventbooking.auth.JwtService;
@@ -21,7 +24,6 @@ import com.jonet.eventbooking.customexception.InvalidRefreshTokenException;
 import com.jonet.eventbooking.customexception.ResourceAlreadyExistsException;
 import com.jonet.eventbooking.dto.AuthResult;
 import com.jonet.eventbooking.dto.RefreshResult;
-import com.jonet.eventbooking.dto.RefreshTokenPayload;
 import com.jonet.eventbooking.dto.request.AuthRequest;
 import com.jonet.eventbooking.dto.request.user.UserRequest;
 import com.jonet.eventbooking.dto.response.auth.AuthResponse;
@@ -35,7 +37,10 @@ import com.jonet.eventbooking.repository.UserRepository;
 import com.jonet.eventbooking.service.AuthService;
 import com.jonet.eventbooking.service.EmailService;
 import com.jonet.eventbooking.service.RoleService;
+import com.jonet.eventbooking.utils.RedisUtil;
 
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -43,13 +48,13 @@ import lombok.RequiredArgsConstructor;
 public class AuthServiceImpl implements AuthService {
 	private final AuthenticationManager authenticationManager;
 	private final JwtService jwtService;
-	private final RedisTemplate<Object, Object> redisTemplate;
-	private final String REFRESH_KEY = "refresh-token";
+	private final StringRedisTemplate stringRedisTemplate;
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final RoleService roleService;
 	private final MailExecutor mailExecutor;
 	private final EmailService emailService;
+	private final RedisTemplate<Object, Object> redisTemplate;
 	
 	private static final String REDIS_SET_KEY = "emails:registed_set";
 
@@ -69,26 +74,34 @@ public class AuthServiceImpl implements AuthService {
 				.build();
 
 		return new AuthResult(new AuthResponse(accessToken, 900L, userResponse),
-				jwtService.generateRefreshToken(myUserDetails));
+				jwtService.generateRefreshToken(myUserDetails.getId()));
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public RefreshResult refreshToken(String refreshToken) {
-		String refreshKey = REFRESH_KEY.concat(":" + refreshToken);
-		RefreshTokenPayload payload = (RefreshTokenPayload) redisTemplate.opsForValue().get(refreshKey);
-		if(payload == null) {
+		String refreshTokenKey = RedisUtil.getRefreshTokenKey(JwtService.sha256Hex(refreshToken));
+		String value = stringRedisTemplate.opsForValue().getAndDelete(refreshTokenKey);
+		if (value == null) {
 			throw new InvalidRefreshTokenException("Refresh token invalid, expired, or already used");
 		}
-		redisTemplate.delete(refreshKey);
+		UUID userId = UUID.fromString(value);
+		UserEntity user = userRepository.findById(userId)
+				.orElseThrow(() -> new InvalidRefreshTokenException("User not found"));
+		if(user.getStatus() == 0) {
+			throw new InvalidRefreshTokenException("Account disabled");
+		}
 
-		MyUserDetails user = MyUserDetails.builder()
-				.id(payload.id())
-				.email(payload.email())
-				.roles(payload.roles())
+		MyUserDetails userDetails = MyUserDetails.builder()
+				.id(user.getId())
+				.email(user.getEmail())
+				.roles(user.getRoles().stream().map(RoleEntity::getCode).toList())
+				.fullname(user.getFullname())
+				.provider(user.getProviderId())
 				.build();
 
-		String newAccessToken = jwtService.generateAccessToken(user);
-		ResponseCookie newRefreshCookie = jwtService.generateRefreshToken(user);
+		String newAccessToken = jwtService.generateAccessToken(userDetails);
+		ResponseCookie newRefreshCookie = jwtService.generateRefreshToken(userDetails.getId());
 
 		return RefreshResult.builder()
 				.accessToken(newAccessToken)
@@ -97,10 +110,21 @@ public class AuthServiceImpl implements AuthService {
 	}
 
 	@Override
-	public void logout(String refreshToken) {
+	public void logout(HttpServletRequest request, String refreshToken) {
+		String header = request.getHeader("Authorization");
+		String accessToken = header.startsWith("Bearer ") ? header.substring(7) : null;
+		try {
+			Claims claims = jwtService.validateAndParse(accessToken);
+			long ttlMs = claims.getExpiration().getTime() - System.currentTimeMillis();
+			if (ttlMs > 0) {
+				redisTemplate.opsForValue().set("denylist:" + claims.getId(), 1, Duration.ofMillis(ttlMs));
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
 		if (refreshToken != null) {
-            redisTemplate.delete(REFRESH_KEY.concat(":" + refreshToken));
-        }
+			redisTemplate.delete(RedisUtil.getRefreshTokenKey(JwtService.sha256Hex(refreshToken)));
+		}
 	}
 
 	@Override

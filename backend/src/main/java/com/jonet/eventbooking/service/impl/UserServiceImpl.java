@@ -4,12 +4,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.stereotype.Service;
 
+import com.jonet.eventbooking.components.MailExecutor;
 import com.jonet.eventbooking.converter.UserMapper;
+import com.jonet.eventbooking.customexception.EntityNotFoundException;
 import com.jonet.eventbooking.dto.request.user.UserRequest;
 import com.jonet.eventbooking.dto.response.user.UserResponse;
 import com.jonet.eventbooking.entity.RoleEntity;
@@ -18,7 +24,9 @@ import com.jonet.eventbooking.enums.AuthProvider;
 import com.jonet.eventbooking.enums.RoleCode;
 import com.jonet.eventbooking.repository.RoleRepository;
 import com.jonet.eventbooking.repository.UserRepository;
+import com.jonet.eventbooking.service.EmailService;
 import com.jonet.eventbooking.service.UserService;
+import com.jonet.eventbooking.utils.PasswordSecureRandom;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +39,11 @@ public class UserServiceImpl implements UserService {
 	private final UserMapper userMapper;
 	private final RoleRepository roleRepository;
 	private final RedisTemplate<Object, Object> redisTemplate;
-    
+    private final PasswordSecureRandom passwordSecureRandom;
+    private final PasswordEncoder passwordEncoder;
+    private final MailExecutor mailExecutor;
+    private final EmailService emailService;
+
 	private static final String REDIS_SET_KEY = "emails:registed_set";
 	private static final String DEFAULT_ROLE = "CUSTOMER"; 
     private static final int STATUS_ACTIVE = 1;
@@ -43,6 +55,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+    @PreAuthorize("hasRole('ADMIN')")
 	public void delete(UUID id, String email) {
 		userRepository.deleteAccount(id);
 		redisTemplate.opsForSet().remove(REDIS_SET_KEY, email);
@@ -105,6 +118,43 @@ public class UserServiceImpl implements UserService {
         return roleRepository.findByCode(RoleCode.CUSTOMER)
                 .orElseThrow(() -> new IllegalStateException(
                     "Role mặc định '" + DEFAULT_ROLE + "' chưa tồn tại trong DB"));
+    }
+
+    @Override
+    public Page<UserResponse> getStaff(String email, Pageable pageable) {
+        List<RoleCode> staffRoles = new ArrayList<>(List.of(
+                RoleCode.ADMIN,
+                RoleCode.ORGANIZER));
+        String normalizedEmail = email == null || email.isBlank() ? null : email.trim();
+        if (normalizedEmail != null) {
+            staffRoles.add(RoleCode.CUSTOMER);
+        }
+        return userRepository.findStaffByRolesAndEmail(staffRoles, normalizedEmail, pageable)
+                .map(userMapper::toUserResponse);
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ADMIN')")
+    public void resetPassword(UUID userId) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        String temporaryPassword = passwordSecureRandom.generateTemporaryPassword(10);
+        user.setPassword(passwordEncoder.encode(temporaryPassword));
+        userRepository.save(user);
+        
+        mailExecutor.submitTask(() -> {
+            emailService.sendEmailResetPassword(user.getEmail(), temporaryPassword);
+        });
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ADMIN')")
+    public void updateStaffRole(UUID userId, RoleCode role) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        RoleEntity roleEntity = roleRepository.findByCode(role).orElseThrow(() -> new EntityNotFoundException("Role not found"));
+        user.setRoles(new ArrayList<>(List.of(roleEntity)));
+        userRepository.save(user);
     }
 
 }

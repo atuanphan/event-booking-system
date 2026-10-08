@@ -10,11 +10,13 @@ import com.jonet.eventbooking.dto.request.AuthRequest;
 import com.jonet.eventbooking.dto.request.user.UserRequest;
 import com.jonet.eventbooking.dto.response.user.UserResponse;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 public interface AuthService {
 	public AuthResult login(AuthRequest request);
 	public RefreshResult refreshToken(String refreshToken);
 	public void registerAccount(UserRequest userRequest);
-	public void logout(String refreshToken);
+	public void logout(HttpServletRequest request, String refreshToken);
 	public UserResponse getCurrentUser(Authentication authentication);
 	public String exchangeOAuthCode(Map<String, String> body);
 }

@@ -18,4 +18,5 @@ public class UserResponse {
 	private String email;
 	private List<RoleCode> roles;
 	private String provider;
+	private int status;
 }

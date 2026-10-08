@@ -11,12 +11,14 @@ import lombok.RequiredArgsConstructor;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @RestController 
 @RequiredArgsConstructor 
 @RequestMapping("/v1/organizer/statistics")
+@PreAuthorize("hasAnyRole('ORGANIZER', 'ADMIN')")
 public class OrganizerStatisticsController {
     private final StatisticsService statisticsService;
 
