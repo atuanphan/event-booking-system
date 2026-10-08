@@ -41,6 +41,7 @@ public class JwtService {
 
     public String generateAccessToken(MyUserDetails user) {
         return Jwts.builder()
+            .setId(UUID.randomUUID().toString())
             .setSubject(user.getId().toString())
             .claim("email", user.getEmail())
             .claim("roles", user.getRoles())
@@ -57,7 +58,7 @@ public class JwtService {
         return ResponseCookie.from("refresh_token", refreshToken)
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("None")
+                .sameSite("Lax")
                 .path("/")
                 .maxAge(Duration.ofMillis(refreshTokenExpiry))
                 .build();

@@ -1,7 +1,5 @@
 package com.jonet.eventbooking.config;
 
-import com.jonet.eventbooking.auth.JwtService;
-
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
@@ -35,12 +33,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j 
 @EnableMethodSecurity
 public class SecurityConfig {
-	private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
 	private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 	private final CustomOAuth2UserService customOAuth2UserService;
 	private final OAuth2SuccessHandler oauth2SuccessHandler;
 	private final PasswordEncoderConfig passwordEncoderConfig;
+	private final JwtFilter jwtFilter;
 
 	@Value("${jonet.redirect-url}")
     private String redirectUrl;
@@ -74,14 +72,9 @@ public class SecurityConfig {
                 String errorMessage = URLEncoder.encode(exception.getMessage(), StandardCharsets.UTF_8);
                 response.sendRedirect(redirectUrl + "/oauth-callback?error=" + errorMessage);
             }))
-			.addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class);
+			.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
        
 		return http.build();
-	}
-	
-	@Bean
-	public JwtFilter jwtFilter() {
-		return new JwtFilter(jwtService);
 	}
 	
 	@Bean

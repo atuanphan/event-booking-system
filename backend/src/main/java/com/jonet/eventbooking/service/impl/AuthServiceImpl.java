@@ -1,5 +1,6 @@
 package com.jonet.eventbooking.service.impl;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -38,6 +39,8 @@ import com.jonet.eventbooking.service.EmailService;
 import com.jonet.eventbooking.service.RoleService;
 import com.jonet.eventbooking.utils.RedisUtil;
 
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -107,10 +110,21 @@ public class AuthServiceImpl implements AuthService {
 	}
 
 	@Override
-	public void logout(String refreshToken) {
+	public void logout(HttpServletRequest request, String refreshToken) {
+		String header = request.getHeader("Authorization");
+		String accessToken = header.startsWith("Bearer ") ? header.substring(7) : null;
+		try {
+			Claims claims = jwtService.validateAndParse(accessToken);
+			long ttlMs = claims.getExpiration().getTime() - System.currentTimeMillis();
+			if (ttlMs > 0) {
+				redisTemplate.opsForValue().set("denylist:" + claims.getId(), 1, Duration.ofMillis(ttlMs));
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
 		if (refreshToken != null) {
-            stringRedisTemplate.delete(RedisUtil.getRefreshTokenKey(refreshToken));
-        }
+			redisTemplate.delete(RedisUtil.getRefreshTokenKey(JwtService.sha256Hex(refreshToken)));
+		}
 	}
 
 	@Override

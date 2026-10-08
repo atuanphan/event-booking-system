@@ -22,6 +22,7 @@ import com.jonet.eventbooking.dto.response.auth.AuthResponse;
 import com.jonet.eventbooking.dto.response.user.UserResponse;
 import com.jonet.eventbooking.service.AuthService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -52,15 +53,12 @@ public class AuthController {
 	}
 
 	@PostMapping("/logout")
-	public ResponseEntity<?> logout(@CookieValue(value = "refresh_token", required = false) String refreshToken) {
-		authService.logout(refreshToken);
+	public ResponseEntity<?> logout(@CookieValue(value = "refresh_token", required = false) String refreshToken, HttpServletRequest request) {
+		authService.logout(request, refreshToken);
 		ResponseCookie deleteRefreshCookie = ResponseCookie.from("refresh_token", "")
 				.httpOnly(true).secure(true).sameSite("Lax").path("/").maxAge(0).build();
-		ResponseCookie deleteAccessCookie = ResponseCookie.from("accessToken", "")
-				.httpOnly(true).secure(false).sameSite("Lax").path("/").maxAge(0).build();
 		return ResponseEntity.ok()
 				.header(HttpHeaders.SET_COOKIE, deleteRefreshCookie.toString())
-				.header(HttpHeaders.SET_COOKIE, deleteAccessCookie.toString())
 				.build();
 	}
 
