@@ -49,21 +49,22 @@ public class SecurityConfig {
 		    .csrf(csrf -> csrf.disable())
 			.cors(Customizer.withDefaults())
 			.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-			.exceptionHandling(ex -> ex
-                                .authenticationEntryPoint(jwtAuthenticationEntryPoint))
+			.exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
 		    .authorizeHttpRequests(auth -> auth
-				    .requestMatchers("/login").permitAll()
-				    .requestMatchers("/ws", "/ws/**").permitAll()
-		    	    .requestMatchers("/v1/admin/**").hasRole("ADMIN")
-		    	    .requestMatchers("/v1/checkin/**").hasAnyRole("STAFF", "ADMIN")
-		    	    .requestMatchers("/v1/events", "/v1/events/**").permitAll()
-					.requestMatchers("/v1/organizer/**").hasAnyRole("ORGANIZER", "ADMIN")
-					.requestMatchers("/v1/auth/login", "/v1/auth/refresh", "/v1/auth/oauth/exchange").permitAll()
-					.requestMatchers("/v1/auth/register").permitAll()
-					.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-					.requestMatchers("/v1/payment/vnpay/ipn", "/v1/payment/vnpay/callback").permitAll()
-					.requestMatchers("/v1/auth/me", "/v1/payment/**").authenticated()
-		    	    .anyRequest().authenticated())
+				.requestMatchers(
+						"/login",
+						"/ws", "/ws/**",
+						"/v1/events", "/v1/events/**",
+						"/v1/auth/login", "/v1/auth/refresh", "/v1/auth/register",
+						"/v1/auth/oauth/exchange",
+						"/v1/payment/vnpay/ipn", "/v1/payment/vnpay/callback"
+				).permitAll()
+				.requestMatchers("/v1/admin/**").hasRole("ADMIN")
+				.requestMatchers("/v1/checkin/**").hasAnyRole("STAFF", "ADMIN")
+				.requestMatchers("/v1/organizer/**").hasAnyRole("ORGANIZER", "ADMIN")
+				.requestMatchers("/v1/auth/me", "/v1/auth/logout", "/v1/payment/**", "/v1/orders/**")
+					.authenticated()
+				.anyRequest().authenticated())
 			.oauth2Login(oauth2 -> oauth2
             .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService)) //nhận info từ Google trả về, tạo/merge vào database
             .successHandler(oauth2SuccessHandler) // custom: tạo/merge user, phát JWT
