@@ -6,6 +6,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -53,6 +54,7 @@ public class AuthController {
 	}
 
 	@PostMapping("/logout")
+	@PreAuthorize("isAuthenticated()")
 	public ResponseEntity<?> logout(@CookieValue(value = "refresh_token", required = false) String refreshToken, HttpServletRequest request) {
 		authService.logout(request, refreshToken);
 		ResponseCookie deleteRefreshCookie = ResponseCookie.from("refresh_token", "")
@@ -63,6 +65,7 @@ public class AuthController {
 	}
 
 	@GetMapping("/me")
+	@PreAuthorize("isAuthenticated()")
 	public ResponseEntity<?> getCurrentUser(Authentication authentication) {
 		UserResponse response = authService.getCurrentUser(authentication);
 		return ResponseEntity.ok(response);

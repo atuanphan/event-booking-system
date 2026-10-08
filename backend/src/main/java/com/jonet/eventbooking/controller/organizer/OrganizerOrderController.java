@@ -20,11 +20,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RestController 
 @RequiredArgsConstructor 
 @RequestMapping("/v1/organizer/orders")
+@PreAuthorize("hasAnyRole('ORGANIZER', 'ADMIN')")
 public class OrganizerOrderController {
     private final OrderService orderService;
 
     @GetMapping
-    @PreAuthorize("hasRole('ORGANIZER')")
     public ResponseEntity<Page<OrderListResponse>> getOrders(@ModelAttribute OrderSearchRequest orderSearchRequest) {
         return ResponseEntity.ok()
                 .body(orderService.getOrders(orderSearchRequest, PageRequest.of(orderSearchRequest.getPage() - 1, orderSearchRequest.getPageSize())));
