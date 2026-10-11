@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.jonet.eventbooking.dto.AuthResult;
 import com.jonet.eventbooking.dto.RefreshResult;
 import com.jonet.eventbooking.dto.request.AuthRequest;
+import com.jonet.eventbooking.dto.request.ChangePasswordRequest;
 import com.jonet.eventbooking.dto.request.user.UserRequest;
 import com.jonet.eventbooking.dto.response.auth.AuthResponse;
 import com.jonet.eventbooking.dto.response.user.UserResponse;
@@ -62,6 +63,14 @@ public class AuthController {
 		return ResponseEntity.ok()
 				.header(HttpHeaders.SET_COOKIE, deleteRefreshCookie.toString())
 				.build();
+	}
+
+	@PostMapping("/change-password")
+	@PreAuthorize("isAuthenticated()")
+	public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request,
+			Authentication authentication) {
+		authService.changePassword(request, authentication);
+		return ResponseEntity.noContent().build();
 	}
 
 	@GetMapping("/me")

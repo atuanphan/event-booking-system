@@ -1,7 +1,8 @@
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Ticket, User, LogOut, Menu, X, ReceiptText } from 'lucide-react';
+import { Ticket, Menu, X, ReceiptText } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import AccountMenu from './AccountMenu';
 
 export default function Layout() {
   const { user, logout, isAdmin, isOrganizer } = useAuth();
@@ -57,16 +58,7 @@ export default function Layout() {
                       Kênh Organizer
                     </Link>
                   )}
-                  <div className="flex items-center gap-2 text-sm text-gray-700">
-                    <User className="w-4 h-4" />
-                    {user.fullname}
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-1 text-gray-500 hover:text-red-600 transition"
-                  >
-                    <LogOut className="w-4 h-4" />
-                  </button>
+                  <AccountMenu user={user} onLogout={handleLogout} />
                 </>
               ) : (
                 <Link
@@ -102,8 +94,7 @@ export default function Layout() {
                     Quản trị
                   </Link>
                 )}
-                <span className="block py-2 text-sm text-gray-500">{user.fullname}</span>
-                <button onClick={handleLogout} className="block py-2 text-red-500">Đăng xuất</button>
+                <AccountMenu user={user} onLogout={handleLogout} variant="mobile" />
               </>
             ) : (
               <>

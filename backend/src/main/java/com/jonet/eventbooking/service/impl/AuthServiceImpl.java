@@ -25,6 +25,7 @@ import com.jonet.eventbooking.customexception.ResourceAlreadyExistsException;
 import com.jonet.eventbooking.dto.AuthResult;
 import com.jonet.eventbooking.dto.RefreshResult;
 import com.jonet.eventbooking.dto.request.AuthRequest;
+import com.jonet.eventbooking.dto.request.ChangePasswordRequest;
 import com.jonet.eventbooking.dto.request.user.UserRequest;
 import com.jonet.eventbooking.dto.response.auth.AuthResponse;
 import com.jonet.eventbooking.dto.response.user.UserResponse;
@@ -125,6 +126,27 @@ public class AuthServiceImpl implements AuthService {
 		if (refreshToken != null) {
 			redisTemplate.delete(RedisUtil.getRefreshTokenKey(JwtService.sha256Hex(refreshToken)));
 		}
+	}
+
+	@Override
+	@Transactional
+	public void changePassword(ChangePasswordRequest request, Authentication authentication) {
+		UUID userId = (UUID) authentication.getPrincipal();
+		UserEntity user = userRepository.findById(userId)
+				.orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+		if (user.getProvider() != AuthProvider.LOCAL) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tài khoản đăng nhập bằng mạng xã hội không thể đổi mật khẩu tại đây");
+		}
+		if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mật khẩu hiện tại không chính xác");
+		}
+		if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mật khẩu mới phải khác mật khẩu hiện tại");
+		}
+
+		user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+		userRepository.save(user);
 	}
 
 	@Override
