@@ -1,10 +1,12 @@
+import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, CreditCard } from 'lucide-react';
+import { ArrowLeft, CreditCard, Smartphone } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function CheckoutPage() {
   const { state } = useLocation();
   const navigate = useNavigate();
+  const [paymentMethod, setPaymentMethod] = useState('vnpay');
 
   if (!state?.event || !state?.orderItems || !state?.paymentUrl) {
     navigate('/');
@@ -14,6 +16,11 @@ export default function CheckoutPage() {
   const { event, orderItems, totalPrice, paymentUrl } = state;
 
   const handlePayment = () => {
+    if (paymentMethod === 'momo') {
+      toast('Thanh toán MoMo chưa được tích hợp');
+      return;
+    }
+
     if (!paymentUrl) {
       toast.error('Không thể tạo liên kết thanh toán');
       return;
@@ -70,12 +77,61 @@ export default function CheckoutPage() {
       </div>
 
       {/* Payment */}
+      <div className="mb-4">
+        <h2 className="font-semibold text-gray-900 mb-3">Phương thức thanh toán</h2>
+        <div className="grid sm:grid-cols-2 gap-3">
+          <label className={`flex items-center gap-3 p-4 bg-white rounded-xl border-2 cursor-pointer transition ${
+            paymentMethod === 'vnpay' ? 'border-indigo-600' : 'border-gray-200 hover:border-gray-300'
+          }`}>
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="vnpay"
+              checked={paymentMethod === 'vnpay'}
+              onChange={() => setPaymentMethod('vnpay')}
+              className="accent-indigo-600"
+            />
+            <span className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-50 text-blue-700">
+              <CreditCard className="w-5 h-5" />
+            </span>
+            <span>
+              <span className="block font-medium text-gray-900">VNPay</span>
+              <span className="block text-sm text-gray-500">Thanh toán trực tuyến</span>
+            </span>
+          </label>
+
+          <label className={`flex items-center gap-3 p-4 bg-white rounded-xl border-2 cursor-pointer transition ${
+            paymentMethod === 'momo' ? 'border-pink-500' : 'border-gray-200 hover:border-gray-300'
+          }`}>
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="momo"
+              checked={paymentMethod === 'momo'}
+              onChange={() => setPaymentMethod('momo')}
+              className="accent-pink-500"
+            />
+            <span className="flex items-center justify-center w-10 h-10 rounded-lg bg-pink-100 text-pink-600">
+              <Smartphone className="w-5 h-5" />
+            </span>
+            <span>
+              <span className="block font-medium text-gray-900">Ví MoMo</span>
+              <span className="block text-sm text-pink-600">Sắp ra mắt</span>
+            </span>
+          </label>
+        </div>
+      </div>
+
       <button
         onClick={handlePayment}
-        className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition flex items-center justify-center gap-2"
+        className={`w-full py-3 text-white rounded-xl font-medium transition flex items-center justify-center gap-2 ${
+          paymentMethod === 'momo'
+            ? 'bg-pink-600 hover:bg-pink-700'
+            : 'bg-indigo-600 hover:bg-indigo-700'
+        }`}
       >
-        <CreditCard className="w-5 h-5" />
-        Thanh toán qua VNPay
+        {paymentMethod === 'momo' ? <Smartphone className="w-5 h-5" /> : <CreditCard className="w-5 h-5" />}
+        Thanh toán qua {paymentMethod === 'momo' ? 'MoMo' : 'VNPay'}
       </button>
     </div>
   );
