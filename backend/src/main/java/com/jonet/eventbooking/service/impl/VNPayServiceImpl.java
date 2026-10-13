@@ -34,7 +34,7 @@ import com.jonet.eventbooking.dto.request.payment.VNPayReturnRequest;
 import com.jonet.eventbooking.dto.response.payment.VNPayQueryResponse;
 import com.jonet.eventbooking.repository.OrderRepository;
 import com.jonet.eventbooking.repository.projections.OrderMinInfo;
-import com.jonet.eventbooking.service.PaymentService;
+import com.jonet.eventbooking.service.VNPayService;
 import com.jonet.eventbooking.utils.VNPayUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -44,7 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j 
-public class VNPayServiceImpl implements PaymentService {
+public class VNPayServiceImpl implements VNPayService {
 	private final OrderRepository orderRepository;
 	private final VNPayConfig vnPayConfig;
 	private final VnpayProperties vnpayProperties;
@@ -55,7 +55,7 @@ public class VNPayServiceImpl implements PaymentService {
 	private static final DateTimeFormatter VNP_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
 	@Override
-	public String createPaymentUrl(UUID orderId, HttpServletRequest request) throws UnsupportedEncodingException {
+	public String createPaymentUrl(UUID orderId, HttpServletRequest request) {
 		String orderType = "190003";// lấy theo danh mục sản phẩm của vnpay
 		String bankCode = "NCB";
 		OrderMinInfo order = orderRepository.getOrderById(orderId);
@@ -98,11 +98,15 @@ public class VNPayServiceImpl implements PaymentService {
 				// Build hash data
 				hashData.append(fieldName);
 				hashData.append('=');
-				hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
-				// Build query
-				query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()));
-				query.append('=');
-				query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
+				try {
+					hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
+					// Build query
+					query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()));
+					query.append('=');
+					query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
+				} catch (UnsupportedEncodingException e) {
+					e.getStackTrace();
+				}
 				if (itr.hasNext()) {
 					query.append('&');
 					hashData.append('&');
