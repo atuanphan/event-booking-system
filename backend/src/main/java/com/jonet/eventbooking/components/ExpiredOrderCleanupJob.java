@@ -17,7 +17,7 @@ import com.jonet.eventbooking.entity.OrderItemsEntity;
 import com.jonet.eventbooking.enums.OrderStatus;
 import com.jonet.eventbooking.repository.OrderItemRepository;
 import com.jonet.eventbooking.repository.OrderRepository;
-import com.jonet.eventbooking.service.PaymentService;
+import com.jonet.eventbooking.service.VNPayService;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +30,7 @@ public class ExpiredOrderCleanupJob {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final RedisTemplate<Object, Object> redisTemplate;
-    private final PaymentService paymentService;
+    private final VNPayService paymentService;
 
     @Value("${server.ip}")
     private String SERVER_IP;
