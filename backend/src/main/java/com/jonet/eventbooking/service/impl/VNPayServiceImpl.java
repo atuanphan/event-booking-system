@@ -27,7 +27,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import com.jonet.eventbooking.config.VNPayConfig;
-import com.jonet.eventbooking.config.VnpayProperties;
+import com.jonet.eventbooking.config.payment.VnpayProperties;
 import com.jonet.eventbooking.customexception.VNPayQueryDrException;
 import com.jonet.eventbooking.dto.request.payment.VNPayQueryRequest;
 import com.jonet.eventbooking.dto.request.payment.VNPayReturnRequest;

@@ -91,3 +91,10 @@ vnpay:
   return-url: ${FRONTEND_URL}/payment/vnpay/ipn
   api-url: ${VNPAY_API_URL}
   query-dr-url: ${VNPAY_QUERY_DR_URL}
+
+momo:
+  partner-code: ${MOMO_PARTNER_CODE}
+  access-key: ${MOMO_ACCESS_KEY}
+  secret-key: ${MOMO_SECRET_KEY}
+  enpoint: ${MOMO_ENDPOINT}
+  redirect-url: ${MOMO_REDIRECT_URL}
