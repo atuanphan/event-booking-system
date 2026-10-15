@@ -14,10 +14,13 @@ import org.springframework.web.client.RestClientResponseException;
 import com.jonet.eventbooking.config.payment.MomoProperties;
 import com.jonet.eventbooking.customexception.EntityNotFoundException;
 import com.jonet.eventbooking.dto.request.payment.MomoQueryRequest;
+import com.jonet.eventbooking.dto.request.payment.MomoReturnRequest;
 import com.jonet.eventbooking.entity.OrderEntity;
+import com.jonet.eventbooking.enums.OrderStatus;
 import com.jonet.eventbooking.repository.OrderRepository;
 import com.jonet.eventbooking.service.MomoService;
 import com.jonet.eventbooking.utils.HashUtil;
+import com.jonet.eventbooking.utils.MomoUtil;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -97,6 +100,34 @@ public class MomoServiceImpl implements MomoService {
                     "MoMo error: " + (response == null ? "no response" : response.get("message")));
         }
         return (String) response.get("payUrl");
+    }
+
+    @Override
+    public void handleIpn(MomoReturnRequest request) {
+        String expectedSignature = HashUtil.hmacSha256(MomoUtil.getQueryParam(request), momoProperties.secretKey());
+        if (!expectedSignature.equals(request.getSignature())) {
+            log.warn("MoMo IPN sai signature: {}", request.getSignature());
+            return;
+        }
+
+        UUID orderId = UUID.fromString(request.getOrderId().substring(0, 0));
+        OrderEntity order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("Order not found"));
+
+        if (order.getStatus() == OrderStatus.COMPLETED) return;
+
+        if (order.getTotalAmount() == BigDecimal.valueOf(request.getAmount())) {
+            log.error("Sai số tiền: IPN={}, order={}", request.getAmount(), order.getTotalAmount());
+            return;
+        }
+
+        if (request.getResultCode() == 0) {
+            order.setStatus(OrderStatus.COMPLETED);
+        } else {
+            order.setStatus(OrderStatus.FAILED);
+            log.info("MoMo thất bại: {} - {}", request.getResultCode(), request.getMessage());
+        }
+        orderRepository.save(order);
     }
 
 }

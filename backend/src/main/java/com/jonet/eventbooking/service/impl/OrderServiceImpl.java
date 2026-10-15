@@ -209,5 +209,12 @@ public class OrderServiceImpl implements OrderService {
 				.toList();
 	}
 
+	@Override
+	public OrderStatus getOrderStatus(UUID id) {
+		OrderEntity order = orderRepository.findById(id)
+				.orElseThrow(() -> new EntityNotFoundException("Order not found"));
+		return order.getStatus();
+	}
+
 	
 }

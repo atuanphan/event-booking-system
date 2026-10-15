@@ -98,3 +98,4 @@ momo:
   secret-key: ${MOMO_SECRET_KEY}
   enpoint: ${MOMO_ENDPOINT}
   redirect-url: ${MOMO_REDIRECT_URL}
+  ipn-url: ${MOMO_IPN_URL}
