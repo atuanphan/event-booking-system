@@ -38,7 +38,7 @@ import com.jonet.eventbooking.repository.OrderRepository;
 import com.jonet.eventbooking.repository.TicketTypeRepository;
 import com.jonet.eventbooking.repository.projections.MonthlyTicketProjection;
 import com.jonet.eventbooking.service.OrderService;
-import com.jonet.eventbooking.service.PaymentService;
+import com.jonet.eventbooking.service.VNPayService;
 import com.jonet.eventbooking.service.TicketTypeService;
 
 import jakarta.transaction.Transactional;
@@ -52,7 +52,7 @@ import lombok.extern.slf4j.Slf4j;
 public class OrderServiceImpl implements OrderService {
 	private final OrderRepository orderRepository;
 	private final TicketTypeRepository ticketTypeRepository;
-	private final PaymentService paymentService;
+	private final VNPayService paymentService;
 	private final TicketTypeService ticketTypeService;
 	private final StringRedisTemplate redisTemplate;
 	private final OrderItemRepository orderItemRepository;
@@ -207,6 +207,13 @@ public class OrderServiceImpl implements OrderService {
 		return IntStream.rangeClosed(1, 12)
 				.mapToObj(m -> new MonthlyTicketDTO(m, data.getOrDefault(m, 0L)))
 				.toList();
+	}
+
+	@Override
+	public OrderStatus getOrderStatus(UUID id) {
+		OrderEntity order = orderRepository.findById(id)
+				.orElseThrow(() -> new EntityNotFoundException("Order not found"));
+		return order.getStatus();
 	}
 
 	

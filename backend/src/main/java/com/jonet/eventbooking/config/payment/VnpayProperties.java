@@ -1,4 +1,4 @@
-package com.jonet.eventbooking.config;
+package com.jonet.eventbooking.config.payment;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;

@@ -13,6 +13,7 @@ import com.jonet.eventbooking.dto.request.payment.VNPayReturnRequest;
 import com.jonet.eventbooking.dto.response.order.OrderListResponse;
 import com.jonet.eventbooking.dto.response.order.OrderResponse;
 import com.jonet.eventbooking.dto.response.payment.VNPayIpnResponse;
+import com.jonet.eventbooking.enums.OrderStatus;
 
 public interface OrderService {
 	public UUID createOrder(OrderRequest orderRequest);
@@ -24,4 +25,5 @@ public interface OrderService {
 	public Page<OrderListResponse> getOrders(OrderSearchRequest orderSearchRequest, Pageable pageable);
 	
 	public List<MonthlyTicketDTO> getMonthlyTickets(UUID organizerId, int year);
+	public OrderStatus getOrderStatus(UUID id);
 }

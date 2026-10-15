@@ -16,6 +16,7 @@ services:
         condition: service_healthy # ← đợi mysql healthy rồi mới start backend
       redis:
         condition: service_healthy # ← đợi redis healthy rồi mới start backend
+    restart: unless-stopped
 
   ticket_frontend_service:
     build: 
@@ -51,6 +52,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine

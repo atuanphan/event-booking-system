@@ -16,6 +16,8 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.springframework.context.annotation.Configuration;
 
+import com.jonet.eventbooking.config.payment.VnpayProperties;
+
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
