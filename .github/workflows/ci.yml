@@ -21,8 +21,43 @@ jobs:
           cache: maven
           cache-dependency-path: backend/pom.xml
       - run: mvn -B verify
-        env:
-          MAIL_HOST: localhost
+    env:
+      DB_URL: jdbc:mysql://localhost:3306/eventhub_test
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      MAIL_HOST: localhost
+      MAIL_PORT: '25'
+      MAIL_USERNAME: test
+      MAIL_PASSWORD: test
+      REDIS_HOST: localhost
+      REDIS_PORT: '6379'
+      JWT_SECRET: ci-test-secret-key-at-least-32-characters-long
+      ACCESS_TOKEN_EXPIRY: '900000'
+      REFRESH_TOKEN_EXPIRY: '604800000'
+      AUTH_COOKIE_SECURE: 'false'
+      GOOGLE_CLIENT_ID: test
+      GOOGLE_CLIENT_SECRET: test
+      FACEBOOK_CLIENT_ID: test
+      FACEBOOK_CLIENT_SECRET: test
+      CLOUDINARY_CLOUD_NAME: test
+      CLOUDINARY_API_KEY: test
+      CLOUDINARY_API_SECRET: test
+      ALLOWED_ORIGINS: http://localhost:3000
+      REDIRECT_URL: http://localhost:3000/oauth2/redirect
+      FRONTEND_URL: http://localhost:3000
+      VNPAY_HASH_SECRET: test
+      VNPAY_TMN_CODE: test
+      VNPAY_PAY_URL: http://localhost/vnpay/pay
+      VNPAY_API_URL: http://localhost/vnpay/api
+      VNPAY_QUERY_DR_URL: http://localhost/vnpay/query
+      SERVER_IP: 127.0.0.1
+      MOMO_DOMAIN_URL: http://localhost
+      MOMO_PARTNER_CODE: test
+      MOMO_ACCESS_KEY: test
+      MOMO_SECRET_KEY: test
+      MOMO_ENDPOINT: http://localhost/momo/create
+      MOMO_IPN_URL: http://localhost/momo/ipn
+      MOMO_REDIRECT_URL: http://localhost:3000/payment/result
 
   frontend:
     runs-on: ubuntu-latest
