@@ -80,7 +80,7 @@ public class ControllerAdvisor extends ResponseEntityExceptionHandler {
 	}
 
 	@ExceptionHandler(exception = InvalidRefreshTokenException.class)
-	public ResponseEntity<Object> handleInvalidRefreshTokenException(BadRequestException ex, HttpServletRequest request) {
+	public ResponseEntity<Object> handleInvalidRefreshTokenException(InvalidRefreshTokenException ex, HttpServletRequest request) {
 		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
 				ErrorMessage.builder()
 				.message(ex.getMessage())
