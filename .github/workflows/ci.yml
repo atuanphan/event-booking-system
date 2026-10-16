@@ -21,6 +21,8 @@ jobs:
           cache: maven
           cache-dependency-path: backend/pom.xml
       - run: mvn -B verify
+        env:
+          MAIL_HOST: localhost
 
   frontend:
     runs-on: ubuntu-latest
