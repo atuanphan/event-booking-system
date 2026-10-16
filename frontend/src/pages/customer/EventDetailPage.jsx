@@ -38,7 +38,6 @@ export default function EventDetailPage() {
   const { user } = useAuth();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [bookingLoading, setBookingLoading] = useState(false);
   const [selectedTickets, setSelectedTickets] = useState({});
 
   useEffect(() => {
@@ -117,40 +116,30 @@ export default function EventDetailPage() {
   }, 0) || 0;
 
   const handleBooking = async () => {
-    if (!user) {
-      toast.error('Vui lòng đăng nhập để đặt vé');
-      navigate('/login');
-      return;
-    }
     if (totalItems === 0) {
       toast.error('Vui lòng chọn ít nhất 1 vé');
       return;
     }
+
     const orderItems = Object.entries(selectedTickets).map(([ticketTypeId, quantity]) => ({
       ticketTypeId,
       quantity,
     }));
 
-    setBookingLoading(true);
-    try {
-      const { data: paymentUrl } = await api.post('/orders', {
-        userId: user.id,
-        status: 'PENDING',
-        orderItems,
+    if (!user) {
+      toast.error('Vui lòng đăng nhập để đặt vé');
+      navigate('/login', {
+        state: {
+          from: '/checkout',
+          checkout: { event, orderItems, totalPrice },
+        },
       });
-
-      navigate('/checkout', {
-        state: { event, orderItems, totalPrice, paymentUrl },
-      });
-    } catch (err) {
-      if (err.response?.status === 409 && err.response?.data?.message === 'Not enough tickets available') {
-        toast.error('Vé đã hết, vui lòng chọn số lượng vé khác.');
-      } else {
-        toast.error(err.response?.data?.message || 'Đặt vé thất bại');
-      }
-    } finally {
-      setBookingLoading(false);
+      return;
     }
+
+    navigate('/checkout', {
+      state: { event, orderItems, totalPrice, userId: user.id },
+    });
   };
 
   if (loading) return <LoadingSpinner />;
@@ -256,11 +245,11 @@ export default function EventDetailPage() {
             </div>
             <button
               onClick={handleBooking}
-              disabled={totalItems === 0 || bookingLoading}
+              disabled={totalItems === 0}
               className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               <ShoppingCart className="w-5 h-5" />
-              {bookingLoading ? 'Đang xử lý...' : `Đặt vé (${totalItems})`}
+              {`Đặt vé (${totalItems})`}
             </button>
           </div>
         </div>

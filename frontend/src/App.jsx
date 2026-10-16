@@ -68,6 +68,7 @@ export default function App() {
         } />
         <Route path="/payment/vnpay/callback" element={<PaymentSuccessPage />} />
         <Route path="/payment/vnpay/ipn" element={<PaymentSuccessPage />} />
+        <Route path="/payment/momo/result" element={<PaymentSuccessPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/oauth-callback" element={<OAuthCallbackPage />} />

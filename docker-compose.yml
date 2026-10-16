@@ -65,6 +65,14 @@ services:
       timeout: 3s
       retries: 5
     restart: unless-stopped
+  
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: omniticket_cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate --url http://ticket_backend_service:8044
+    depends_on:
+      - ticket_backend_service
 
 volumes:  
   mysql-data:

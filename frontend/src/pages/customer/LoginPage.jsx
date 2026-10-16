@@ -44,7 +44,10 @@ export default function LoginPage() {
     try {
       const user = await login(values.email, values.password);
       toast.success('Đăng nhập thành công!');
-      navigate(from, { replace: true });
+      const checkoutState = location.state?.checkout
+        ? { ...location.state.checkout, userId: user.id }
+        : undefined;
+      navigate(from, { replace: true, state: checkoutState });
     } catch (err) {
       toast.error(err.response?.data?.message || 'Sai email hoặc mật khẩu');
     } finally {

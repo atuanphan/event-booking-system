@@ -1,31 +1,38 @@
 import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, CreditCard, Smartphone } from 'lucide-react';
 import toast from 'react-hot-toast';
+import api from '../../api/axios';
 
 export default function CheckoutPage() {
   const { state } = useLocation();
   const navigate = useNavigate();
   const [paymentMethod, setPaymentMethod] = useState('vnpay');
+  const [paymentLoading, setPaymentLoading] = useState(false);
 
-  if (!state?.event || !state?.orderItems || !state?.paymentUrl) {
-    navigate('/');
-    return null;
+  if (!state?.event || !state?.orderItems || !state?.userId) {
+    return <Navigate to="/" replace />;
   }
 
-  const { event, orderItems, totalPrice, paymentUrl } = state;
+  const { event, orderItems, totalPrice, userId } = state;
 
-  const handlePayment = () => {
-    if (paymentMethod === 'momo') {
-      toast('Thanh toán MoMo chưa được tích hợp');
-      return;
-    }
+  const handlePayment = async () => {
+    setPaymentLoading(true);
+    try {
+      const { data: paymentUrl } = await api.post('/orders', {
+        userId,
+        orderItems,
+        paymentMethod: paymentMethod.toUpperCase(),
+      });
 
-    if (!paymentUrl) {
-      toast.error('Không thể tạo liên kết thanh toán');
-      return;
+      if (typeof paymentUrl !== 'string' || !paymentUrl) {
+        throw new Error('Backend không trả về liên kết thanh toán');
+      }
+      window.location.assign(paymentUrl);
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || 'Không thể tạo liên kết thanh toán');
+      setPaymentLoading(false);
     }
-    window.location.href = paymentUrl;
   };
 
   return (
@@ -116,7 +123,7 @@ export default function CheckoutPage() {
             </span>
             <span>
               <span className="block font-medium text-gray-900">Ví MoMo</span>
-              <span className="block text-sm text-pink-600">Sắp ra mắt</span>
+              <span className="block text-sm text-pink-600">Thanh toán trực tuyến</span>
             </span>
           </label>
         </div>
@@ -124,14 +131,17 @@ export default function CheckoutPage() {
 
       <button
         onClick={handlePayment}
+        disabled={paymentLoading}
         className={`w-full py-3 text-white rounded-xl font-medium transition flex items-center justify-center gap-2 ${
           paymentMethod === 'momo'
             ? 'bg-pink-600 hover:bg-pink-700'
             : 'bg-indigo-600 hover:bg-indigo-700'
-        }`}
+        } disabled:opacity-60 disabled:cursor-wait`}
       >
         {paymentMethod === 'momo' ? <Smartphone className="w-5 h-5" /> : <CreditCard className="w-5 h-5" />}
-        Thanh toán qua {paymentMethod === 'momo' ? 'MoMo' : 'VNPay'}
+        {paymentLoading
+          ? 'Đang tạo giao dịch...'
+          : `Thanh toán qua ${paymentMethod === 'momo' ? 'MoMo' : 'VNPay'}`}
       </button>
     </div>
   );

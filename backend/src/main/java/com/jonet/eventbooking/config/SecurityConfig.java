@@ -58,7 +58,7 @@ public class SecurityConfig {
 						"/v1/auth/login", "/v1/auth/refresh", "/v1/auth/register",
 						"/v1/auth/oauth/exchange",
 						"/v1/payment/vnpay/ipn", "/v1/payment/vnpay/callback",
-						"/v1/payment/momo/ipn"
+						"/v1/payment/momo/ipn", "/v1/payment/momo/result"
 				).permitAll()
 				.requestMatchers("/v1/admin/**").hasRole("ADMIN")
 				.requestMatchers("/v1/checkin/**").hasAnyRole("STAFF", "ADMIN")
