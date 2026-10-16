@@ -96,6 +96,6 @@ momo:
   partner-code: ${MOMO_PARTNER_CODE}
   access-key: ${MOMO_ACCESS_KEY}
   secret-key: ${MOMO_SECRET_KEY}
-  enpoint: ${MOMO_ENDPOINT}
+  endpoint: ${MOMO_ENDPOINT}
   redirect-url: ${MOMO_REDIRECT_URL}
   ipn-url: ${MOMO_IPN_URL}

@@ -1,12 +1,15 @@
 package com.jonet.eventbooking.service.impl;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
@@ -49,12 +52,13 @@ public class MomoServiceImpl implements MomoService {
         String orderInfo = "Thanh toán qua ví MoMo";
         String extraData = "";
         String requestType = "captureWallet";
+        String momoOrderId = orderId + "-" + System.currentTimeMillis();
 
         String data = "accessKey=" + momoProperties.accessKey()
                 + "&amount=" + amount
                 + "&extraData=" + extraData
                 + "&ipnUrl=" + momoProperties.ipnUrl()
-                + "&orderId=" + orderId + "-" + System.currentTimeMillis()
+                + "&orderId=" + momoOrderId
                 + "&orderInfo=" + orderInfo
                 + "&partnerCode=" + momoProperties.partnerCode()
                 + "&redirectUrl=" + momoProperties.redirectUrl()
@@ -68,7 +72,7 @@ public class MomoServiceImpl implements MomoService {
                 .accessKey(momoProperties.accessKey())
                 .requestId(requestId)
                 .amount(amount)
-                .orderId(orderId.toString())
+                .orderId(momoOrderId)
                 .orderInfo(orderInfo)
                 .redirectUrl(momoProperties.redirectUrl())
                 .ipnUrl(momoProperties.ipnUrl())
@@ -103,20 +107,23 @@ public class MomoServiceImpl implements MomoService {
     }
 
     @Override
+    @Transactional
     public void handleIpn(MomoReturnRequest request) {
         String expectedSignature = HashUtil.hmacSha256(MomoUtil.getQueryParam(request), momoProperties.secretKey());
-        if (!expectedSignature.equals(request.getSignature())) {
+        if (!MessageDigest.isEqual(
+                expectedSignature.getBytes(StandardCharsets.UTF_8),
+                request.getSignature().getBytes(StandardCharsets.UTF_8))) {
             log.warn("MoMo IPN sai signature: {}", request.getSignature());
             return;
         }
 
-        UUID orderId = UUID.fromString(request.getOrderId().substring(0, 0));
+        UUID orderId = UUID.fromString(request.getOrderId().substring(0, 36));
         OrderEntity order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found"));
 
         if (order.getStatus() == OrderStatus.COMPLETED) return;
 
-        if (order.getTotalAmount() == BigDecimal.valueOf(request.getAmount())) {
+        if (order.getTotalAmount().compareTo(BigDecimal.valueOf(request.getAmount())) != 0) {
             log.error("Sai số tiền: IPN={}, order={}", request.getAmount(), order.getTotalAmount());
             return;
         }

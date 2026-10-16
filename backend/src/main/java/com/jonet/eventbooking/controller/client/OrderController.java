@@ -2,6 +2,8 @@ package com.jonet.eventbooking.controller.client;
 
 import java.util.UUID;
 
+import jakarta.validation.Valid;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,7 +30,7 @@ public class OrderController {
 	private final PaymentService paymentService;
 	
 	@PostMapping
-	public ResponseEntity<String> order(@RequestBody OrderRequest orderRequest, HttpServletRequest request) {	
+	public ResponseEntity<String> order(@Valid @RequestBody OrderRequest orderRequest, HttpServletRequest request) {
 		return ResponseEntity.ok(paymentService.getPayment(orderRequest, request));
 	}
 
@@ -39,7 +41,8 @@ public class OrderController {
 	}
 
 	@GetMapping("/{id}/status")
-	public ResponseEntity<?> getStatusOrder(@PathVariable UUID id) {
-		return ResponseEntity.ok(orderService.getOrderStatus(id));
+	public ResponseEntity<?> getStatusOrder(@PathVariable String id) {
+		UUID orderId = UUID.fromString(id.substring(0, 36));
+		return ResponseEntity.ok(orderService.getOrderStatus(orderId));
 	}
 }

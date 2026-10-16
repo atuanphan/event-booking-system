@@ -26,7 +26,7 @@ public class PaymentServiceImpl implements PaymentService{
         switch (orderRequest.getPaymentMethod()) {
             case VNPAY : return vnPayService.createPaymentUrl(orderId, request);
             case MOMO : return momoService.createPaymentUrl(orderId);
-            default : return null;
+            default : throw new IllegalArgumentException("Payment method invalid");
         }
     }
 
