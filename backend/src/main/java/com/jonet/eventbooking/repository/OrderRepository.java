@@ -22,70 +22,70 @@ import jakarta.persistence.LockModeType;
 import jakarta.transaction.Transactional;
 
 @Transactional
-public interface OrderRepository extends JpaRepository<OrderEntity, UUID>, OrderRepositoryCustom{
-	@Query(value = """
-			SELECT o.id AS id, o.totalAmount AS totalAmount FROM OrderEntity o WHERE o.user.Id = :user_id AND o.status = 'PENDING'
-			""")
-	OrderMinInfo getOrderByUser(@Param("user_id") UUID userId);
-	
-	@Modifying
-	@Query(value = "UPDATE orders SET status = :status WHERE id = :id", nativeQuery = true)
-	void updateOrderStatusById(@Param("id") UUID id, @Param("status") String status);
-	
-	@Query(value = """
-			SELECT o.id AS id, o.totalAmount AS totalAmount FROM OrderEntity o WHERE o.id = :id AND o.status = 'PENDING'
-			""")
-	OrderMinInfo getOrderById(@Param("id") UUID id);
+public interface OrderRepository extends JpaRepository<OrderEntity, UUID>, OrderRepositoryCustom {
+    @Query(value = """
+            SELECT o.id AS id, o.totalAmount AS totalAmount FROM OrderEntity o WHERE o.user.Id = :user_id AND o.status = 'PENDING'
+            """)
+    OrderMinInfo getOrderByUser(@Param("user_id") UUID userId);
 
-	void deleteByStatus(String status);
+    @Modifying
+    @Query(value = "UPDATE orders SET status = :status WHERE id = :id", nativeQuery = true)
+    void updateOrderStatusById(@Param("id") UUID id, @Param("status") String status);
 
-	List<OrderEntity> findByUserId(UUID userId);
+    @Query(value = """
+            SELECT o.id AS id, o.totalAmount AS totalAmount FROM OrderEntity o WHERE o.id = :id AND o.status = 'PENDING'
+            """)
+    OrderMinInfo getOrderById(@Param("id") UUID id);
 
-	@Lock(LockModeType.PESSIMISTIC_WRITE)
+    void deleteByStatus(String status);
+
+    List<OrderEntity> findByUserId(UUID userId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT o FROM OrderEntity o WHERE o.id = :id")
     Optional<OrderEntity> findByIdForUpdate(@Param("id") UUID id);
 
-	List<OrderEntity> findByStatusAndExpiresAtBefore(OrderStatus status, LocalDateTime expiresAt, Pageable pageable);
-    
-	@Query("""
-        SELECT COALESCE(SUM(oi.quantity), 0)
-        FROM OrderItemsEntity oi
-        WHERE oi.ticketType.event.user.id = :organizerId
-          AND oi.order.status = :status
-        """)
+    List<OrderEntity> findByStatusAndExpiresAtBefore(OrderStatus status, LocalDateTime expiresAt, Pageable pageable);
+
+    @Query("""
+            SELECT COALESCE(SUM(oi.quantity), 0)
+            FROM OrderItemsEntity oi
+            WHERE oi.ticketType.event.user.id = :organizerId
+              AND oi.order.status = :status
+            """)
     long totalTicketsSold(@Param("organizerId") UUID organizerId,
-                      @Param("status") OrderStatus status);
+            @Param("status") OrderStatus status);
 
-	@Query("""
-        SELECT COALESCE(SUM(o.totalAmount), 0)
-        FROM OrderEntity o
-        WHERE o.status = :status
-          AND EXISTS (
-              SELECT 1 FROM OrderItemsEntity oi
-              WHERE oi.order = o
-                AND oi.ticketType.event.user.id = :organizerId
-          )
-        """)
+    @Query("""
+            SELECT COALESCE(SUM(o.totalAmount), 0)
+            FROM OrderEntity o
+            WHERE o.status = :status
+              AND EXISTS (
+                  SELECT 1 FROM OrderItemsEntity oi
+                  WHERE oi.order = o
+                    AND oi.ticketType.event.user.id = :organizerId
+              )
+            """)
     BigDecimal totalRevenue(@Param("organizerId") UUID organizerId,
-                        @Param("status") OrderStatus status);
+            @Param("status") OrderStatus status);
 
-  @Query("""
-    SELECT MONTH(o.createdAt) AS month,
-           COALESCE(SUM(o.totalAmount), 0) AS revenue
-    FROM OrderEntity o
-    WHERE o.status = :status
-      AND o.createdAt >= :from
-      AND o.createdAt <  :to
-      AND EXISTS (
-          SELECT 1 FROM OrderItemsEntity oi
-          WHERE oi.order = o
-            AND oi.ticketType.event.user.id = :organizerId
-      )
-    GROUP BY MONTH(o.createdAt)
-    ORDER BY MONTH(o.createdAt)
-    """)
-  List<MonthlyRevenueProjection> revenueByMonth(@Param("organizerId") UUID organizerId,
-                                              @Param("status") OrderStatus status,
-                                              @Param("from") LocalDateTime from,
-                                              @Param("to") LocalDateTime to);
+    @Query("""
+            SELECT MONTH(o.createdAt) AS month,
+                   COALESCE(SUM(o.totalAmount), 0) AS revenue
+            FROM OrderEntity o
+            WHERE o.status = :status
+              AND o.createdAt >= :from
+              AND o.createdAt <  :to
+              AND EXISTS (
+                  SELECT 1 FROM OrderItemsEntity oi
+                  WHERE oi.order = o
+                    AND oi.ticketType.event.user.id = :organizerId
+              )
+            GROUP BY MONTH(o.createdAt)
+            ORDER BY MONTH(o.createdAt)
+            """)
+    List<MonthlyRevenueProjection> revenueByMonth(@Param("organizerId") UUID organizerId,
+            @Param("status") OrderStatus status,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to);
 }
