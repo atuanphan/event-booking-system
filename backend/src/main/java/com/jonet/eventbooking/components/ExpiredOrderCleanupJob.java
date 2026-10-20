@@ -18,6 +18,7 @@ import com.jonet.eventbooking.enums.OrderStatus;
 import com.jonet.eventbooking.repository.OrderItemRepository;
 import com.jonet.eventbooking.repository.OrderRepository;
 import com.jonet.eventbooking.service.VNPayService;
+import com.jonet.eventbooking.utils.RedisUtil;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -34,8 +35,6 @@ public class ExpiredOrderCleanupJob {
 
     @Value("${server.ip}")
     private String SERVER_IP;
-
-    private String REDIS_KEY_PREFIX = "ticket:stock:";
 
     @Scheduled(fixedDelay = 60000)
     public void cleanupExpiredOrders() {
@@ -77,7 +76,7 @@ public class ExpiredOrderCleanupJob {
         List<OrderItemsEntity> items = orderItemRepository.findByOrderId(orderId);
         items.forEach(item ->
                 redisTemplate.opsForValue().increment(
-                        REDIS_KEY_PREFIX + item.getTicketType().getId(),
+                        RedisUtil.ticketStockKey(item.getTicketType().getId()),
                         item.getQuantity())
         );
  
