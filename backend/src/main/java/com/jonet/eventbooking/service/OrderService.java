@@ -16,7 +16,7 @@ import com.jonet.eventbooking.dto.response.payment.VNPayIpnResponse;
 import com.jonet.eventbooking.enums.OrderStatus;
 
 public interface OrderService {
-	public UUID createOrder(OrderRequest orderRequest);
+	public UUID createOrder(String idempotencyKey, OrderRequest orderRequest, UUID userId);
 	VNPayIpnResponse processVNpayIpn(VNPayReturnRequest request);
 	void scanExpiredOrders();
 	List<OrderResponse> myTickets(UUID userId);

@@ -6,6 +6,7 @@ import java.util.UUID;
 import com.jonet.eventbooking.enums.OrderStatus;
 import com.jonet.eventbooking.enums.PaymentMethod;
 
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,6 +17,8 @@ public class OrderRequest {
 	private UUID id;
 	private UUID userId;
 	private OrderStatus status = OrderStatus.PENDING;
+
+	@NotEmpty
 	private List<OrderItemsRequest> orderItems;
 	@NotNull(message = "Payment method is required")
 	private PaymentMethod paymentMethod;

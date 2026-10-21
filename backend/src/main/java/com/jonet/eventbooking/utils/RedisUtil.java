@@ -1,5 +1,7 @@
 package com.jonet.eventbooking.utils;
 
+import java.util.UUID;
+
 public class RedisUtil {
 
     public static String getRefreshTokenKey(String token) {
@@ -8,5 +10,13 @@ public class RedisUtil {
 
     public static String getOAuthCodeKey(String code) {
         return "oauth-code:" + code;
+    }
+
+    public static String ticketStockKey(UUID id) {
+        return "ticket:stock:" + id;
+    }
+
+    public static String idempotencyKey(String idempotency, UUID userId) {
+        return "Idempotency:" + userId + ":" + idempotency;
     }
 }

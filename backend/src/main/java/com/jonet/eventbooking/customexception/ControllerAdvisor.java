@@ -100,4 +100,37 @@ public class ControllerAdvisor extends ResponseEntityExceptionHandler {
 				.path(request.getRequestURI())
 				.build());
 	}
+
+	@ExceptionHandler(exception = InvalidQuantityException.class)
+	public ResponseEntity<Object> handleInvalidQuantityException(InvalidQuantityException ex, HttpServletRequest request) {
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+				ErrorMessage.builder()
+				.message(ex.getMessage())
+				.timestamp(LocalDateTime.now())
+				.status(HttpStatus.BAD_REQUEST.value())
+				.path(request.getRequestURI())
+				.build());
+	}
+
+	@ExceptionHandler(exception = RequestInProgressException.class)
+	public ResponseEntity<Object> handleRequestInProgressException(RequestInProgressException ex, HttpServletRequest request) {
+		return ResponseEntity.status(HttpStatus.CONFLICT).body(
+				ErrorMessage.builder()
+				.message(ex.getMessage())
+				.timestamp(LocalDateTime.now())
+				.status(HttpStatus.CONFLICT.value())
+				.path(request.getRequestURI())
+				.build());
+	}
+
+	@ExceptionHandler(exception = OrderItemRequiredException.class)
+	public ResponseEntity<Object> handleOrderItemRequiredException(OrderItemRequiredException ex, HttpServletRequest request) {
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+				ErrorMessage.builder()
+				.message(ex.getMessage())
+				.timestamp(LocalDateTime.now())
+				.status(HttpStatus.BAD_REQUEST.value())
+				.path(request.getRequestURI())
+				.build());
+	}
 }
