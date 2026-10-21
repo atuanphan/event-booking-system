@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, CreditCard, Smartphone } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -9,21 +9,27 @@ export default function CheckoutPage() {
   const navigate = useNavigate();
   const [paymentMethod, setPaymentMethod] = useState('vnpay');
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const idempotencyKey = useRef(crypto.randomUUID());
 
-  if (!state?.event || !state?.orderItems || !state?.userId) {
+  if (!state?.event || !state?.orderItems) {
     return <Navigate to="/" replace />;
   }
 
-  const { event, orderItems, totalPrice, userId } = state;
+  const { event, orderItems, totalPrice } = state;
 
   const handlePayment = async () => {
     setPaymentLoading(true);
     try {
-      const { data: paymentUrl } = await api.post('/orders', {
-        userId,
-        orderItems,
-        paymentMethod: paymentMethod.toUpperCase(),
-      });
+      const { data: paymentUrl } = await api.post(
+        '/orders',
+        {
+          orderItems,
+          paymentMethod: paymentMethod.toUpperCase(),
+        },
+        {
+          headers: { 'Idempotency-Key': idempotencyKey.current },
+        }
+      );
 
       if (typeof paymentUrl !== 'string' || !paymentUrl) {
         throw new Error('Backend không trả về liên kết thanh toán');
