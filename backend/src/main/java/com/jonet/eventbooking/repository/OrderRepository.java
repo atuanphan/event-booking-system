@@ -94,9 +94,10 @@ public interface OrderRepository extends JpaRepository<OrderEntity, UUID>, Order
         FROM TicketTypeEntity tt
         JOIN tt.event e
         WHERE tt.id IN :ticketTypeIds
-            AND e.status = com.jonet.eventbooking.enums.EventStatus.FINISHED
+            AND e.status IN (com.jonet.eventbooking.enums.EventStatus.ONGOING,
+            com.jonet.eventbooking.enums.EventStatus.CANCELLED)
         """)
-    boolean hasFinishedEvent(@Param("ticketTypeIds") List<UUID> ticketTypeIds);
+    boolean hasOngoingOrCancelledEvent(@Param("ticketTypeIds") List<UUID> ticketTypeIds);
 
     boolean existsByUser_IdAndIdempotencyKey(UUID userId, String idempotencyKey);
 }

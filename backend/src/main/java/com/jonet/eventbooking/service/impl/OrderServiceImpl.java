@@ -90,7 +90,7 @@ public class OrderServiceImpl implements OrderService {
 			throw new EntityNotFoundException("One or more ticket types not found");
 		}
 
-		if (orderRepository.hasFinishedEvent(new ArrayList<>(quantities.keySet()))) {
+		if (orderRepository.hasOngoingOrCancelledEvent(new ArrayList<>(quantities.keySet()))) {
 			throw new BadRequestException("Cannot book tickets for an event that has already ended");
 		}
 
