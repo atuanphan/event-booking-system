@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
@@ -18,6 +19,7 @@ public class PromotionRequest {
 	private String code;
 
 	@NotBlank(message = "discount type is required!")
+	@Pattern(regexp = "PERCENTAGE|FIXED", message = "discount type must be PERCENTAGE or FIXED!")
 	private String discountType;
 
 	@NotNull(message = "discount value is required!")

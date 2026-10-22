@@ -15,4 +15,5 @@ public class PromotionResponse {
 	private BigDecimal discountValue;
 	private Integer maxUsage;
 	private Integer usedCount;
+	private UUID eventId;
 }

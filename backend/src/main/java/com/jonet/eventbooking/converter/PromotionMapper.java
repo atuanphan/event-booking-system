@@ -11,15 +11,18 @@ import com.jonet.eventbooking.entity.PromotionEntity;
 @Mapper(componentModel = "spring")
 public interface PromotionMapper {
 
+    @Mapping(source = "event.id", target = "eventId")
     PromotionResponse toResponse(PromotionEntity entity);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "usedCount", ignore = true)
+    @Mapping(target = "event", ignore = true)
     @Mapping(target = "orderEntities", ignore = true)
     PromotionEntity toEntity(PromotionRequest request);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "usedCount", ignore = true)
+    @Mapping(target = "event", ignore = true)
     @Mapping(target = "orderEntities", ignore = true)
     void updateEntity(PromotionRequest request, @MappingTarget PromotionEntity entity);
 }

@@ -16,10 +16,12 @@ public interface EventMapper {
 	EventResponse toEventResponse(EventEntity eventEntity);
 	
 	@Mapping(source = "venueId", target = "venue.id")
+	@Mapping(target = "promotions", ignore = true)
 	EventEntity toEventEntity(EventRequest eventRequest);
 	
 	EventDetailResponse toEventDetailResponse(EventEntity eventEntity);
 
+	@Mapping(target = "promotions", ignore = true)
 	void updateEventEntity(EventRequest request, @MappingTarget EventEntity entity);
 	
 	EventResponse eventResponse(EventEntity eventEntity);

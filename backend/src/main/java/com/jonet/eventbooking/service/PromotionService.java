@@ -9,9 +9,9 @@ import com.jonet.eventbooking.dto.request.promotion.PromotionRequest;
 import com.jonet.eventbooking.dto.response.promotion.PromotionResponse;
 
 public interface PromotionService {
-	Page<PromotionResponse> getPromotions(Pageable pageable);
-	PromotionResponse getPromotion(UUID id);
-	void create(PromotionRequest request);
-	void update(UUID id, PromotionRequest request);
-	void delete(UUID id);
+	Page<PromotionResponse> getPromotions(UUID eventId, UUID organizerId, Pageable pageable);
+	PromotionResponse getPromotion(UUID eventId, UUID id, UUID organizerId);
+	void create(UUID eventId, UUID organizerId, PromotionRequest request);
+	void update(UUID eventId, UUID id, UUID organizerId, PromotionRequest request);
+	void delete(UUID eventId, UUID id, UUID organizerId);
 }

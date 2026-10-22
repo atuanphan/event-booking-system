@@ -217,10 +217,16 @@ CREATE TABLE promotions (
     discount_value DECIMAL(19,2),
     max_usage INT,
     used_count INT,
+    event_id BINARY(16),
 
     PRIMARY KEY (id),
 
-    UNIQUE KEY uk_promotions_code (code)
+    UNIQUE KEY uk_promotions_code (code),
+    CONSTRAINT fk_promotions_event
+        FOREIGN KEY (event_id)
+        REFERENCES events(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci;
@@ -796,7 +802,8 @@ INSERT INTO promotions
     discount_type,
     discount_value,
     max_usage,
-    used_count
+    used_count,
+    event_id
 )
 VALUES
 (
@@ -805,7 +812,8 @@ VALUES
     'PERCENTAGE',
     10.00,
     100,
-    2
+    2,
+    UUID_TO_BIN('20000000-0000-0000-0000-000000000001')
 ),
 (
     UUID_TO_BIN('50000000-0000-0000-0000-000000000002'),
@@ -813,7 +821,8 @@ VALUES
     'FIXED',
     100000.00,
     50,
-    1
+    1,
+    UUID_TO_BIN('20000000-0000-0000-0000-000000000002')
 ),
 (
     UUID_TO_BIN('50000000-0000-0000-0000-000000000003'),
@@ -821,7 +830,8 @@ VALUES
     'PERCENTAGE',
     20.00,
     20,
-    1
+    1,
+    UUID_TO_BIN('20000000-0000-0000-0000-000000000003')
 ),
 (
     UUID_TO_BIN('50000000-0000-0000-0000-000000000004'),
@@ -829,7 +839,8 @@ VALUES
     'FIXED',
     50000.00,
     100,
-    2
+    2,
+    UUID_TO_BIN('20000000-0000-0000-0000-000000000004')
 );
 
 
