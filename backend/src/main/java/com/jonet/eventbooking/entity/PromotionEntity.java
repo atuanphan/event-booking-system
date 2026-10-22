@@ -39,7 +39,7 @@ public class PromotionEntity {
 	private Integer maxUsage;
 	
 	@Column(name = "used_count")
-	private Integer used_count;
+	private Integer usedCount;
 	
 	@OneToMany(mappedBy = "promotion")
 	private List<OrderEntity> orderEntities;
