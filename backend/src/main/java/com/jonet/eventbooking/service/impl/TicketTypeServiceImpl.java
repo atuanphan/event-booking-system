@@ -43,7 +43,8 @@ public class TicketTypeServiceImpl implements TicketTypeService {
 		});
 
 		data.forEach((id, quantity) -> {
-			if (RedisUtil.ticketStockKey(id) == null) {
+			Boolean exists = redisTemplate.hasKey(RedisUtil.ticketStockKey(id));
+			if (!Boolean.TRUE.equals(exists)) {
 				throw new RedisKeyNotFoundException("Redis key not found");
 			}
 		});

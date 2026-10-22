@@ -98,18 +98,5 @@ public interface OrderRepository extends JpaRepository<OrderEntity, UUID>, Order
         """)
     boolean hasFinishedEvent(@Param("ticketTypeIds") List<UUID> ticketTypeIds);
 
-    @Query("""
-        SELECT CASE WHEN COUNT(o) > 0 THEN true ELSE false END
-        FROM OrderEntity o
-        WHERE o.status = 'PENDING'
-        """)
-    boolean existOrder(@Param("userId") UUID userId, @Param("eventId") UUID eventId);
-
-    @Query("""
-        SELECT CASE WHEN COUNT(o) > 0 THEN true ELSE false END
-        FROM OrderEntity o
-        WHERE o.user.id = :userId AND o.idempotencyKey = :idempotencyKey
-        """)
-    boolean existingOrder(@Param("userId") UUID userId, @Param("idempotencyKey") String idempotencyKey);
-    
+    boolean existsByUser_IdAndIdempotencyKey(UUID userId, String idempotencyKey);
 }

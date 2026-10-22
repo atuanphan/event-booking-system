@@ -2,7 +2,6 @@ package com.jonet.eventbooking.service.impl;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -10,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -80,23 +78,28 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	public UUID createOrder(String idempotencyKey, OrderRequest orderRequest, UUID userId) {
 		validateIdempotencyKeyFormat(idempotencyKey);
-		Map<UUID, Integer> quantities = toQuantities(orderRequest);
 
 		if (!TransactionSynchronizationManager.isSynchronizationActive()) {
 			throw new IllegalStateException("Running in transaction");
+		}
+
+		Map<UUID, Integer> quantities = toQuantities(orderRequest);
+		Map<UUID, TicketTypeEntity> tickets = ticketTypeRepository.findAllById(quantities.keySet())
+				.stream().collect(Collectors.toMap(TicketTypeEntity::getId, Function.identity()));
+		if(tickets.size() != quantities.size()) {
+			throw new EntityNotFoundException("One or more ticket types not found");
 		}
 
 		if (orderRepository.hasFinishedEvent(new ArrayList<>(quantities.keySet()))) {
 			throw new BadRequestException("Cannot book tickets for an event that has already ended");
 		}
 
-		if(orderRepository.existingOrder(userId, idempotencyKey)) {
-			throw new DuplicateIdempotencyKeyException("Duplicate idempotencyKey");
+		if(orderRepository.existsByUser_IdAndIdempotencyKey(userId, idempotencyKey)) {
+			throw new DuplicateIdempotencyKeyException("Duplicate idempotency key");
 		}
 
 		Map<UUID, Integer> reserved = new HashMap<>();
-		AtomicReference<UUID> orderIdRef = new AtomicReference<>();
-		registerCompletionCallback(reserved, RedisUtil.idempotencyKey(idempotencyKey, userId), orderIdRef);
+		registerCompletionCallback(reserved, RedisUtil.idempotencyKey(idempotencyKey, userId));
 
 		LocalDateTime now = LocalDateTime.now();
 		UserEntity user = userRepository.findById(userId)
@@ -109,8 +112,6 @@ public class OrderServiceImpl implements OrderService {
 				.idempotencyKey(idempotencyKey)
 				.build();
 
-		Map<UUID, TicketTypeEntity> tickets = ticketTypeRepository.findAllById(quantities.keySet())
-				.stream().collect(Collectors.toMap(TicketTypeEntity::getId, Function.identity()));
 		List<OrderItemsEntity> orderItemsEntities = quantities.entrySet().stream().map(req -> {
 			TicketTypeEntity ticket = tickets.get(req.getKey());
 
@@ -132,7 +133,6 @@ public class OrderServiceImpl implements OrderService {
 
 		Map<UUID, Integer> available = ticketTypeService.updateAvailableQuantity(quantities);
 		reserved.putAll(quantities);
-		orderIdRef.set(orderEntity.getId());
 
 		available.forEach((id, quantity) -> {
 			eventPublisher.publishEvent(new TicketQuantityChangedEvent(id, quantity));
@@ -269,15 +269,13 @@ public class OrderServiceImpl implements OrderService {
 		}
 	}
 
-	private void registerCompletionCallback(Map<UUID, Integer> reserved, String idempotencyKey,
-			AtomicReference<UUID> orderIdRef) {
+	private void registerCompletionCallback(Map<UUID, Integer> reserved, String idempotencyKey) {
 		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
 			@Override
 			public void afterCompletion(int status) {
 				try {
 					if (status == STATUS_COMMITTED) {
-						redisTemplate.opsForValue().set(idempotencyKey,
-								orderIdRef.get().toString(), Duration.ofMillis(1));
+						log.info("idempotency key");
 					} else if (status == STATUS_ROLLED_BACK) {
 						if (!reserved.isEmpty()) {
 							Map<UUID, Integer> available = ticketTypeService.releaseStock(reserved);
