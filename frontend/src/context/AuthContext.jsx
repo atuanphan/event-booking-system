@@ -44,6 +44,14 @@ export function AuthProvider({ children }) {
       const ok = await initAuth();
       if (!ok) {
         clearSession();
+      } else if (!user?.provider) {
+        try {
+          const { data: currentUser } = await api.get('/auth/me');
+          localStorage.setItem('user', JSON.stringify(currentUser));
+          setUser(currentUser);
+        } catch (error) {
+          console.error('Unable to refresh user profile:', error);
+        }
       }
       setAuthReady(true);
     })();
