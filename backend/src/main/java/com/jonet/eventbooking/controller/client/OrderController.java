@@ -6,11 +6,13 @@ import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -30,8 +32,10 @@ public class OrderController {
 	private final PaymentService paymentService;
 	
 	@PostMapping
-	public ResponseEntity<String> order(@Valid @RequestBody OrderRequest orderRequest, HttpServletRequest request) {
-		return ResponseEntity.ok(paymentService.getPayment(orderRequest, request));
+	public ResponseEntity<String> order(@RequestHeader("Idempotency-Key") String idempotencyKey,
+			@Valid @RequestBody OrderRequest orderRequest, @AuthenticationPrincipal UUID userId,
+			HttpServletRequest request) {
+		return ResponseEntity.ok(paymentService.getPayment(idempotencyKey, orderRequest, request, userId));
 	}
 
 	@GetMapping("/my-tickets")

@@ -21,8 +21,8 @@ public class PaymentServiceImpl implements PaymentService{
     private final MomoService momoService;
 
     @Override
-    public String getPayment(OrderRequest orderRequest, HttpServletRequest request) {
-        UUID orderId = orderService.createOrder(orderRequest);
+    public String getPayment(String idempotencyKey, OrderRequest orderRequest, HttpServletRequest request, UUID userId) {
+        UUID orderId = orderService.createOrder(idempotencyKey, orderRequest, userId);
         switch (orderRequest.getPaymentMethod()) {
             case VNPAY : return vnPayService.createPaymentUrl(orderId, request);
             case MOMO : return momoService.createPaymentUrl(orderId);

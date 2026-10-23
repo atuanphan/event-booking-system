@@ -79,6 +79,30 @@ export async function getEvent(id) {
   return items.find((event) => event.id === id) || null;
 }
 
+export async function getPromotions(eventId) {
+  const { data } = await api.get(`/organizer/events/${eventId}/promotions`, {
+    params: { page: 1, pageSize: 100 },
+  });
+  return data?.list || [];
+}
+
+export async function getPromotion(eventId, promotionId) {
+  const { data } = await api.get(`/organizer/events/${eventId}/promotions/${promotionId}`);
+  return data;
+}
+
+export async function createPromotion(eventId, values) {
+  await api.post(`/organizer/events/${eventId}/promotions`, values);
+}
+
+export async function updatePromotion(eventId, promotionId, values) {
+  await api.put(`/organizer/events/${eventId}/promotions/${promotionId}`, values);
+}
+
+export async function deletePromotion(eventId, promotionId) {
+  await api.delete(`/organizer/events/${eventId}/promotions/${promotionId}`);
+}
+
 export async function cancelEvent(id) {
   await api.delete(`/organizer/events/${id}`);
 }

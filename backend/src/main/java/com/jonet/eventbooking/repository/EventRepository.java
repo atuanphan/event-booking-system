@@ -3,6 +3,7 @@ package com.jonet.eventbooking.repository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -20,6 +21,9 @@ import jakarta.transaction.Transactional;
 
 @Transactional
 public interface EventRepository extends JpaRepository<EventEntity, UUID>, JpaSpecificationExecutor<EventEntity> {
+	@Query("SELECT e FROM EventEntity e WHERE e.id = :eventId AND e.user.id = :organizerId")
+	Optional<EventEntity> findOwnedById(@Param("eventId") UUID eventId, @Param("organizerId") UUID organizerId);
+
 	@Modifying
 	@Query(value = "UPDATE events SET status = 'CANCELLED' WHERE id IN (:ids)", nativeQuery = true)
 	public void softDeleteEvents(@Param("ids") List<UUID> ids);

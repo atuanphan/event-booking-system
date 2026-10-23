@@ -20,6 +20,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -27,7 +28,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "orders")
+@Table(name = "orders", uniqueConstraints = {
+		@UniqueConstraint(name = "uk_orders_user_id_idempotency_key", columnNames = { "user_id",
+				"idempotency_key" }) })
 @Getter
 @Setter
 @NoArgsConstructor
@@ -52,6 +55,9 @@ public class OrderEntity {
 
 	@Column(name = "created_at", nullable = false)
 	private LocalDateTime createdAt;
+
+	@Column (name = "idempotency_key")
+	private String idempotencyKey;
 	
 	@OneToMany(mappedBy = "order", cascade = {CascadeType.PERSIST}, orphanRemoval = true)
 	private List<OrderItemsEntity> orderItems;

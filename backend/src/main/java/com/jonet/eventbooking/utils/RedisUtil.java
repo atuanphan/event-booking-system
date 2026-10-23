@@ -15,4 +15,8 @@ public class RedisUtil {
     public static String ticketStockKey(UUID id) {
         return "ticket:stock:" + id;
     }
+
+    public static String idempotencyKey(String idempotency, UUID userId) {
+        return "Idempotency:" + userId + ":" + idempotency;
+    }
 }

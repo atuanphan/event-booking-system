@@ -4,9 +4,12 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -14,13 +17,21 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.jonet.eventbooking.converter.OrderMapper;
+import com.jonet.eventbooking.customexception.BadRequestException;
+import com.jonet.eventbooking.customexception.DuplicateIdempotencyKeyException;
 import com.jonet.eventbooking.customexception.EntityNotFoundException;
+import com.jonet.eventbooking.customexception.InvalidQuantityException;
+import com.jonet.eventbooking.customexception.OrderItemRequiredException;
 import com.jonet.eventbooking.dto.MonthlyTicketDTO;
+import com.jonet.eventbooking.dto.request.order.OrderItemsRequest;
 import com.jonet.eventbooking.dto.request.order.OrderRequest;
 import com.jonet.eventbooking.dto.request.order.OrderSearchRequest;
 import com.jonet.eventbooking.dto.request.payment.VNPayReturnRequest;
@@ -36,9 +47,11 @@ import com.jonet.eventbooking.model.TicketQuantityChangedEvent;
 import com.jonet.eventbooking.repository.OrderItemRepository;
 import com.jonet.eventbooking.repository.OrderRepository;
 import com.jonet.eventbooking.repository.TicketTypeRepository;
+import com.jonet.eventbooking.repository.UserRepository;
 import com.jonet.eventbooking.repository.projections.MonthlyTicketProjection;
 import com.jonet.eventbooking.service.OrderService;
 import com.jonet.eventbooking.service.VNPayService;
+import com.jonet.eventbooking.utils.RedisUtil;
 import com.jonet.eventbooking.service.TicketTypeService;
 
 import jakarta.transaction.Transactional;
@@ -56,40 +69,74 @@ public class OrderServiceImpl implements OrderService {
 	private final TicketTypeService ticketTypeService;
 	private final StringRedisTemplate redisTemplate;
 	private final OrderItemRepository orderItemRepository;
-	private final String redisKey = "ticket:stock:";
 	private final OrderMapper orderMapper;
 	private final ApplicationEventPublisher eventPublisher;
 	private final OrderItemRepository orderItemsRepository;
+	private final UserRepository userRepository;
+	private final SimpMessagingTemplate messagingTemplate;
 
 	@Override
-	public UUID createOrder(OrderRequest orderRequest) {
+	public UUID createOrder(String idempotencyKey, OrderRequest orderRequest, UUID userId) {
+		validateIdempotencyKeyFormat(idempotencyKey);
+
+		if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+			throw new IllegalStateException("Running in transaction");
+		}
+
+		Map<UUID, Integer> quantities = toQuantities(orderRequest);
+		Map<UUID, TicketTypeEntity> tickets = ticketTypeRepository.findAllById(quantities.keySet())
+				.stream().collect(Collectors.toMap(TicketTypeEntity::getId, Function.identity()));
+		if(tickets.size() != quantities.size()) {
+			throw new EntityNotFoundException("One or more ticket types not found");
+		}
+
+		if (orderRepository.hasOngoingOrCancelledEvent(new ArrayList<>(quantities.keySet()))) {
+			throw new BadRequestException("Cannot book tickets for an event that has already ended");
+		}
+
+		if(orderRepository.existsByUser_IdAndIdempotencyKey(userId, idempotencyKey)) {
+			throw new DuplicateIdempotencyKeyException("Duplicate idempotency key");
+		}
+
+		Map<UUID, Integer> reserved = new HashMap<>();
+		registerCompletionCallback(reserved, RedisUtil.idempotencyKey(idempotencyKey, userId));
+
+		LocalDateTime now = LocalDateTime.now();
+		UserEntity user = userRepository.findById(userId)
+				.orElseThrow(() -> new EntityNotFoundException("User not found"));
 		OrderEntity orderEntity = OrderEntity.builder()
-		        .user(new UserEntity(orderRequest.getUserId()))
-				.status(orderRequest.getStatus())
-				.expiresAt(LocalDateTime.now().plusMinutes(15))
-				.createdAt(LocalDateTime.now())
+				.user(user)
+				.status(OrderStatus.PENDING)
+				.expiresAt(now.plusMinutes(15))
+				.createdAt(now)
+				.idempotencyKey(idempotencyKey)
 				.build();
-		List<OrderItemsEntity> orderItemsEntities = orderRequest.getOrderItems().stream().map(req -> {
-			TicketTypeEntity ticket = ticketTypeRepository.findById(req.getTicketTypeId())
-					.orElseThrow(() -> new EntityNotFoundException("Ticket not found"));
-			int remainingQuantity = ticketTypeService.updateAvailableQuantity(ticket.getId(), req.getQuantity());
-			eventPublisher.publishEvent(new TicketQuantityChangedEvent(ticket.getId(), remainingQuantity));
+
+		List<OrderItemsEntity> orderItemsEntities = quantities.entrySet().stream().map(req -> {
+			TicketTypeEntity ticket = tickets.get(req.getKey());
 
 			return OrderItemsEntity.builder()
-			        .order(orderEntity)
-				    .ticketType(ticket)
+					.order(orderEntity)
+					.ticketType(ticket)
 					.price(ticket.getPrice())
-					.quantity(req.getQuantity())
+					.quantity(req.getValue())
 					.build();
 		}).collect(Collectors.toList());
 
 		BigDecimal totalAmount = orderItemsEntities.stream()
 				.map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
 				.reduce(BigDecimal.ZERO, BigDecimal::add);
-				
+
 		orderEntity.setOrderItems(orderItemsEntities);
 		orderEntity.setTotalAmount(totalAmount);
 		orderRepository.save(orderEntity);
+
+		Map<UUID, Integer> available = ticketTypeService.updateAvailableQuantity(quantities);
+		reserved.putAll(quantities);
+
+		available.forEach((id, quantity) -> {
+			eventPublisher.publishEvent(new TicketQuantityChangedEvent(id, quantity));
+		});
 
 		return orderEntity.getId();
 	}
@@ -154,7 +201,7 @@ public class OrderServiceImpl implements OrderService {
             orderRepository.updateOrderStatusById(orderId, OrderStatus.CANCELLED.name());
             orderItemRepository.findByOrderId(orderId).forEach(item ->
                     redisTemplate.opsForValue().increment(
-                            redisKey + item.getTicketType().getId(),
+                            RedisUtil.ticketStockKey(item.getTicketType().getId()),
                             item.getQuantity())
             );
             log.info("VNPay IPN: order {} CANCELLED, responseCode={}",
@@ -215,6 +262,56 @@ public class OrderServiceImpl implements OrderService {
 				.orElseThrow(() -> new EntityNotFoundException("Order not found"));
 		return order.getStatus();
 	}
-
 	
+	private void validateIdempotencyKeyFormat(String idempotencyKey) {
+		if (idempotencyKey == null || idempotencyKey.isBlank() || idempotencyKey.length() > 100) {
+			throw new BadRequestException("Idempotency-Key header is required (max 100 characters)"); 
+		}
+	}
+
+	private void registerCompletionCallback(Map<UUID, Integer> reserved, String idempotencyKey) {
+		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+			@Override
+			public void afterCompletion(int status) {
+				try {
+					if (status == STATUS_COMMITTED) {
+						log.info("idempotency key");
+					} else if (status == STATUS_ROLLED_BACK) {
+						if (!reserved.isEmpty()) {
+							Map<UUID, Integer> available = ticketTypeService.releaseStock(reserved);
+							available.forEach((id, quantity) -> {
+								messagingTemplate.convertAndSend(
+										"/topic/events/" + id + "/available", quantity);
+							});
+						}
+					} else {
+						log.error("Không xác định được kết quả transaction, KHÔNG hoàn kho. key={}, reserved={}",
+								idempotencyKey, reserved);
+					}
+				} catch (RuntimeException e) {
+					log.error("Lỗi khi dọn dẹp sau transaction. key={}, reserved={}",
+							idempotencyKey, reserved, e);
+				}
+			}
+		});
+	}
+
+	private Map<UUID, Integer> toQuantities(OrderRequest orderRequest) {
+		Map<UUID, Integer> quantities = new HashMap<>();
+		if (orderRequest == null || orderRequest.getOrderItems() == null || orderRequest.getOrderItems().isEmpty()) {
+			throw new OrderItemRequiredException("Order item is required");
+		}
+		for (OrderItemsRequest item : orderRequest.getOrderItems()) {
+			if (item == null || item.getTicketTypeId() == null) {
+				throw new BadRequestException("Ticket type id is required");
+			}
+			if (item.getQuantity() <= 0) {
+				throw new InvalidQuantityException("Ticket quantity cannot be negative");
+			}
+			if (quantities.putIfAbsent(item.getTicketTypeId(), item.getQuantity()) != null) {
+				throw new BadRequestException("Duplicate ticket type in order");
+			}
+		}
+		return quantities;
+	}
 }
